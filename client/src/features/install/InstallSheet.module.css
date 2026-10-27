@@ -1,0 +1,129 @@
+/* Hoja "Instalar Kobo" — guía por plataforma. Solo tokens (DESIGN.md §3). */
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.intro {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-tint);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.done span {
+  color: var(--accent);
+}
+
+/* Atajo cuando el navegador sí ofrece prompt nativo: instalar es un botón, no
+   una lista de pasos. Los pasos se quedan debajo como respaldo. */
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.quickText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---------- Pasos numerados ---------- */
+.steps {
+  list-style: none;
+  counter-reset: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* El número va en Mincho: es la única cifra de la hoja y le da el tono del sistema. */
+.num {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  border: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stepText {
+  flex: 1;
+  min-width: 0;
+  padding-top: 3px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.stepText strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* El glifo del sistema va detrás del texto que lo nombra, alineado a la línea. */
+.stepIcon {
+  display: inline-flex;
+  vertical-align: -4px;
+  margin-left: var(--space-2);
+  color: var(--ink-3);
+}
+
+.note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.note strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* Callejón sin salida (navegador embebido): se marca con el acento porque exige
+   una acción distinta —salir de esa app— y no otra lectura de los pasos. */
+.warn {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-tint);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}

@@ -1,0 +1,80 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+  transition:
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    background 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.block {
+  width: 100%;
+}
+
+.accent {
+  background: var(--accent-grad);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-glow);
+}
+.accent:active {
+  box-shadow: 0 0 26px -2px var(--accent-glow);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.ghost:active {
+  background: var(--surface-2);
+}
+
+.quiet {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.quiet:active {
+  background: var(--surface);
+}
+
+/* =====================================================================
+ * Hover con guard (DESIGN.md §19.6). Sin `@media (hover: hover)` el estado se
+ * queda pegado tras el toque en táctil: el navegador aplica :hover al tocar y
+ * no lo retira hasta el siguiente toque en otro sitio. Solo tinta y sombra:
+ * el desplazamiento/escalado es cosa del :active.
+ * ===================================================================== */
+@media (hover: hover) {
+  .accent:hover:not(:disabled) {
+    box-shadow: 0 0 26px -2px var(--accent-glow);
+  }
+
+  .ghost:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+
+  .quiet:hover:not(:disabled) {
+    background: var(--surface);
+  }
+}

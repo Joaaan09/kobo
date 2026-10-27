@@ -1,0 +1,91 @@
+/* Aviso de instalación en el login. Se apoya en el borde inferior, dentro de la
+ * misma columna que el formulario (`--shell-max`), y nunca tapa los campos: el
+ * login cabe de sobra en una pantalla de móvil.
+ * z-index 30: por encima del contenido, por debajo de las hojas (que son
+ * `<dialog>` en la top-layer y siempre ganan). */
+
+.banner {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(env(safe-area-inset-bottom) + var(--space-4));
+  z-index: 30;
+
+  max-width: calc(var(--shell-max) - var(--space-4) * 2);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-raised);
+
+  /* Chrome de la app: nada que seleccionar (evita la lupa de iOS al mantener). */
+  -webkit-user-select: none;
+  user-select: none;
+
+  animation: bannerIn var(--dur-sheet-in) var(--ease-out) both;
+}
+
+.leaving {
+  animation: bannerOut var(--dur-sheet-out) var(--ease-out) both;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sub {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* Sube desde el borde: el mismo gesto que una hoja, pero corto — no es un modal,
+ * es algo que se asoma. La salida no rebota: quitarse de en medio es rápido. */
+@keyframes bannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bannerOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* El reset global ya anula las duraciones con `prefers-reduced-motion`; aquí solo
+ * hace falta que el estado final de ambos keyframes sea el correcto, y lo es. */

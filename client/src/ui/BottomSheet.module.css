@@ -1,0 +1,293 @@
+/* OJO: el `display` tiene que ir condicionado a [open]. Una regla de autor
+ * `display: flex` a secas pisa el `dialog:not([open]) { display: none }` del
+ * navegador y el diálogo cerrado se queda como capa fija transparente que se
+ * come los clics de todo el contenido (su z-index auto tapa el <main>). */
+.dialog {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* IMPRESCINDIBLE: el estilo de navegador de `<dialog>` es `width: fit-content`,
+   * y con un ancho intrínseco `left: 0; right: 0` NO estira nada. El diálogo
+   * tomaba entonces el `max-width: 460px` del panel como su propio ancho y, en
+   * una pantalla de 390, se salía 70 px por la derecha; al ser `fixed` tampoco
+   * generaba scroll, así que ese trozo quedaba inalcanzable. Se notaba solo en
+   * las hojas cuyo contenido llega a los 460 (una estrecha como "Nueva cuenta"
+   * cabía de casualidad). El `max-width` lo pone el panel, no el diálogo. */
+  width: 100%;
+  max-width: 100%;
+  /* ANCLADO AL VIEWPORT *VISIBLE*, no al layout viewport. En iOS el teclado se
+   * superpone: el layout viewport (al que se ancla un `position: fixed`) no
+   * cambia, así que una hoja pegada a `inset: 0` queda literalmente debajo del
+   * teclado. JS mide `visualViewport` y publica aquí su geometría (ver
+   * `BottomSheet.tsx`), de modo que la caja del diálogo es SIEMPRE el trozo de
+   * pantalla que el usuario ve de verdad y el panel se apoya en su borde
+   * inferior. Sin JS/`visualViewport`, fallback a la pantalla entera. */
+  top: var(--sheet-top, 0px);
+  height: var(--sheet-vh, 100dvh);
+  margin: 0;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: transparent;
+  /* Reserva arriba el notch para que en hojas muy altas el título no toque el
+   * borde. `box-sizing: border-box` es global (tokens.css), así que este padding
+   * se descuenta hacia dentro. */
+  padding-top: env(safe-area-inset-top);
+  /* El teclado sube y la hoja se apoya sobre él deslizando, no de un salto. */
+  transition:
+    top 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    height 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.dialog[open] {
+  display: flex;
+}
+
+/* VELO. Antes entraba y salía de golpe: el panel deslizaba 240 ms mientras el
+ * fondo se oscurecía y se desenfocaba en un solo fotograma, y al cerrar
+ * desaparecía de golpe al llamar a `close()`. Ese corte era el 80 % de la
+ * sensación de "esto aparece de sopetón". Ahora funde a la vez que el panel.
+ *
+ * Se anima `opacity`, no `backdrop-filter`: la opacidad del pseudo-elemento
+ * atenúa también el desenfoque (se compone con transparencia), va por GPU y no
+ * obliga a Safari a interpolar un filtro fotograma a fotograma. */
+.dialog::backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* `[open]` para que arranque solo al abrirse el diálogo, igual que la del panel. */
+.dialog[open]::backdrop {
+  animation: velo-entrar var(--dur-sheet-in) var(--ease-out) both;
+}
+
+/* Especificidad por encima de la de arriba (3 clases/atributos vs 2): si no,
+ * el velo de salida no llegaría a pisar al de entrada. */
+.dialog[open].saliendoVelo::backdrop {
+  animation: velo-salir var(--dur-sheet-out) var(--ease-out) forwards;
+}
+
+@keyframes velo-entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes velo-salir {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.panel {
+  width: 100%;
+  max-width: 460px;
+  /* Nunca excede el área visible real: el diálogo ya es exactamente esa área (y
+   * ya se ha descontado el notch con su `padding-top`), así que basta con dejar
+   * `--space-3` de aire arriba. Su contenido hace scroll interno sin cortar el
+   * borde superior. */
+  max-height: calc(100% - var(--space-3));
+  overflow-y: auto;
+  /* La hoja NUNCA se desplaza en horizontal. Hace falta decirlo explícitamente:
+   * declarar `overflow-y: auto` convierte el eje X en `auto` por su cuenta, y en
+   * iOS un scroller con eje X vivo se deja arrastrar de lado —con su rebote—
+   * aunque no haya nada que desplazar. Se notaba en las hojas altas (las que sí
+   * tienen scroll vertical); una corta como "Nueva cuenta" no llega a ser
+   * scroller y por eso se sentía fija. Si algún día una hoja necesita un carril
+   * horizontal, que lo lleve ese carril, no el panel. */
+  overflow-x: hidden;
+  /* Refuerzo a nivel de gesto: dentro de la hoja solo se reconoce el paneo
+   * vertical (y el pinch del sistema). Hoy ningún contenido pide paneo lateral. */
+  touch-action: pan-y pinch-zoom;
+  /* `none`, no `contain`: `contain` corta la propagación al fondo pero DEJA el
+   * rebote elástico dentro del propio panel, y en iOS eso se ve como que el
+   * contenido se despega de la hoja al arrastrarlo (medido en un iPhone real:
+   * `scrollTop` bajando a −68). Con `none` no hay rebote local ni
+   * propagación: la hoja se siente sólida. */
+  overscroll-behavior: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  /* Hoja inferior: pegada al fondo, esquinas superiores redondeadas. */
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--shadow-raised);
+  /* Con el teclado abierto la barra de gestos queda tapada por él: reservar ahí
+   * la safe-area inferior sería aire muerto que empuja el formulario fuera de
+   * vista. `--sheet-kb` (alto del teclado, lo pone JS) la cancela. */
+  padding: var(--space-3) var(--space-5)
+    calc(var(--space-6) + max(0px, env(safe-area-inset-bottom) - var(--sheet-kb, 0px)));
+  padding-top: var(--space-2);
+  /* ENTRADA POR KEYFRAMES, NO POR TRANSICIÓN. El estado base del panel es su
+   * posición FINAL (sin transform): pase lo que pase, la hoja acaba apoyada en
+   * el fondo. La animación se dispara sola cada vez que el `<dialog>` sale de
+   * `display: none`, así que tampoco hace falta el doble rAF que sincronizaba
+   * el estado inicial.
+   *
+   * Por qué se cambió (medido en un iPhone real, iOS 18.7 PWA): con
+   * `transform: translateY(100%)` + `transition`, Safari no respetaba el estado
+   * inicial —el panel llegaba a su sitio en 26 ms en vez de 240— y a
+   * continuación interpolaba hasta `translateY(-100%)`, dejando la hoja casi
+   * fuera de pantalla por arriba (`top=-645`). Una animación con keyframes tiene
+   * principio y fin explícitos: no puede pasarse de largo.
+   *
+   * CURVA DE DRAWER, NO LA DE SISTEMA. `--ease-drawer` (la de iOS/Ionic) arranca
+   * decidida y frena largo: es lo que da la sensación de peso de una hoja
+   * nativa. La curva por defecto (`--ease-out`) a 240 ms llegaba y se plantaba,
+   * que es justo lo que se leía como "muy directo". Y NO lleva overshoot pese a
+   * lo que decía DESIGN.md §13: en una hoja que puede ocupar toda la pantalla,
+   * rebotar descubre una franja de fondo por debajo del panel y lee como goma
+   * (regla reescrita allí). */
+  animation: entrar var(--dur-sheet-in) var(--ease-drawer);
+}
+
+@keyframes entrar {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Salida: la pone JS justo antes de cerrar el diálogo. `forwards` mantiene el
+ * panel fuera hasta que el `<dialog>` se cierra de verdad.
+ *
+ * Más rápida que la entrada A PROPÓSITO (DESIGN.md §13): al abrir, el usuario
+ * mira llegar la hoja y el recorrido largo se disfruta; al cerrar ya ha
+ * decidido y lo que quiere es recuperar la pantalla. */
+.saliendo {
+  animation: salir var(--dur-sheet-out) var(--ease-drawer) forwards;
+}
+
+@keyframes salir {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* El panel recibe el foco al abrir (es el punto de partida accesible: el lector
+ * de pantalla lee el título antes que nada). No es un control, así que no debe
+ * pintar anillo de foco; los controles de dentro conservan el suyo. */
+.panel:focus {
+  outline: none;
+}
+
+
+.grabber {
+  width: 40px;
+  height: 4px;
+  margin: var(--space-2) auto var(--space-3);
+  border-radius: var(--r-pill);
+  background: var(--border-strong);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* =====================================================================
+ * 大 lg — La hoja se convierte en MODAL CENTRADO (DESIGN.md §19.5).
+ * En el centro de un monitor no hay un "abajo" del que venir: deslizar media
+ * pantalla para enseñar un formulario de 400 px lee como lentitud, no como
+ * peso. Mismo componente, otra gramática de entrada.
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .dialog {
+    align-items: center;
+  }
+
+  .panel {
+    max-width: 520px;
+    /* Alto acotado por los dos lados: ni pega con los bordes de la ventana ni
+       se estira a 1400 px en un monitor alto. */
+    max-height: min(720px, calc(100% - 64px));
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-6);
+    /* Ni el ratón arrastra la hoja ni hay safe-area que cancelar aquí. */
+    animation: entrarModal var(--dur-2) var(--ease-out);
+  }
+
+  /* El asa es para el pulgar: sin gesto de arrastre, es ruido. */
+  .grabber {
+    display: none;
+  }
+
+  .saliendo {
+    animation: salirModal var(--dur-1) var(--ease-out) forwards;
+  }
+}
+
+/* Sube 8 px y escala desde 0.98: lo justo para que el ojo lo lea como "esto
+   acaba de llegar" sin que nada recorra la pantalla. `--ease-drawer` NO se usa
+   aquí (§19.5): su frenada larga es para recorridos de pantalla completa. */
+@keyframes entrarModal {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes salirModal {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+}
+
+/* DESIGN.md §13: con `reduce` no hay desplazamientos ni fundidos, la hoja
+ * simplemente está o no está (el velo incluido: fundirlo dejaría medio efecto
+ * a medias). El JS acompaña poniendo sus esperas a 0. */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .saliendo {
+    animation: none;
+  }
+
+  .dialog[open]::backdrop,
+  .dialog[open].saliendoVelo::backdrop {
+    animation: none;
+  }
+
+  .dialog {
+    transition: none;
+  }
+}

@@ -1,0 +1,57 @@
+/* Tirar para recargar (PWA standalone) — DESIGN.md §15.
+   Superficie plana + borde 1px + radio de píldora; solo tokens. */
+
+/* Wrapper transparente: no toca el layout (el shell define su propio alto). */
+.wrapper {
+  position: relative;
+}
+
+/* Píldora que baja desde el borde superior al tirar. Reserva el safe-area para
+   no nacer bajo el notch, y va por encima de la cabecera (z-index 20) sin
+   estorbar al FAB (30). Sombra propia: cruza la cabecera glass y debe leerse. */
+.indicator {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 6px);
+  left: 50%;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  pointer-events: none;
+  transform: translate(-50%, 0);
+  transition:
+    transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 200ms ease;
+}
+
+/* Mientras el dedo arrastra, la píldora lo sigue al píxel: sin transición. */
+.dragging {
+  transition: none;
+}
+
+/* Mismo anillo que `ui/Spinner`, pero quieto: aquí la rotación la manda el
+   gesto (rotate en línea), no una animación. */
+.ring {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: var(--r-pill);
+}
+
+/* Menos movimiento (§13): la píldora no viaja con el dedo — se queda arriba y solo
+   entra por opacidad, que sigue diciendo cuánto llevas tirado. El `!important` es
+   deliberado: el desplazamiento lo escribe el gesto como estilo en línea y es la
+   única forma de anularlo desde CSS. */
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transform: translate(-50%, 0) !important;
+    transition: opacity 200ms ease;
+  }
+}

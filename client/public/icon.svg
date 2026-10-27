@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kobo">
+  <title>Kobo</title>
+  <!-- 達磨貯金箱 — daruma hucha. Geometría trazada del original de marca
+       (brand/kobo-icon-512.png), error máx. 0,8 px sobre 512.
+       Un ojo pintado = meta fijada; el segundo se pinta al cerrar el mes. -->
+  <defs>
+    <linearGradient id="washi" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0" stop-color="#f6f2ea"/>
+      <stop offset="1" stop-color="#eae1d1"/>
+    </linearGradient>
+    <linearGradient id="cuerpo" x1="0.1" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#c14b30"/>
+      <stop offset="1" stop-color="#a2331c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle de papel washi -->
+  <rect width="512" height="512" rx="110" fill="url(#washi)"/>
+
+  <!-- Cuerpo -->
+  <path fill="url(#cuerpo)" d="M256 114.6C295.8 114.6 338.6 124.6 369.2 154.8C399.8 185 411.4 227 414.1 267.9C416.7 309.4 408.1 356.1 369.4 381.3C333.3 404.8 289.8 406.5 256 406.5C222.3 406.5 178.7 404.8 142.6 381.3C103.9 356.1 95.3 309.4 97.9 267.9C100.6 227 112.2 185 142.8 154.8C173.4 124.6 216.3 114.6 256 114.6Z"/>
+
+  <!-- Ranura de la hucha (coronilla) -->
+  <rect x="198" y="136.5" width="116" height="15" rx="7.5" fill="#69291a"/>
+
+  <!-- Cara -->
+  <ellipse cx="256" cy="237" rx="90" ry="62.5" fill="#fbf6ec"/>
+
+  <!-- Ojo pintado (meta fijada) -->
+  <ellipse cx="216" cy="237" rx="16" ry="19" fill="#1b1512"/>
+  <!-- Ojo sin pintar (se pinta al cerrar el mes) -->
+  <ellipse cx="296" cy="237" rx="16.5" ry="19.5" fill="none" stroke="#bcb7af" stroke-width="6"/>
+</svg>

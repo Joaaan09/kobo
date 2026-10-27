@@ -1,0 +1,29 @@
+.segmented {
+  display: inline-flex;
+  width: 100%;
+  padding: 3px;
+  gap: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+}
+
+.segment {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-3);
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}

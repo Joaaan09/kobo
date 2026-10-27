@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Ventana de app, no página web: sin escalado del usuario (el zoom accidental
+         descoloca la cabecera sticky y la nav fija, y en standalone no hay barra de
+         URL para deshacerlo) y con el teclado virtual encogiendo el layout viewport
+         (`interactive-widget`) para que la nav/hoja no queden debajo del teclado. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+    />
+    <meta name="description" content="Kobo (工房) — tu taller de finanzas personales." />
+
+    <!-- Color del chrome del sistema (barra de estado de la PWA, barra del navegador).
+         Van DOS metas, una por esquema, y el script de abajo (luego ThemeProvider) pone
+         en AMBAS el color del tema REALMENTE resuelto. Con una sola meta, iOS elige por
+         la apariencia del iPhone: con el móvil en oscuro descarta nuestro color y pinta
+         la franja del notch de negro aunque Kobo esté en Washi. Igualándolas, el sistema
+         no tiene otra opción que la nuestra. Ver DESIGN.md §15. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f1eee9" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#f1eee9" />
+
+    <!-- PWA: instalable, standalone, iconos -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <!-- Fallback para navegadores sin favicon SVG y para la pestaña en Windows. -->
+    <link rel="alternate icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <!-- Safari/iOS no acepta SVG en apple-touch-icon: PNG obligatorio. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Franja de la barra de estado en standalone (iOS): `default` = fondo claro con
+         glifos oscuros (Washi), `black` = fondo tinta con glifos claros (Sumi). Lo fija
+         el script de abajo con el tema resuelto. NO usamos `black-translucent`: está
+         deprecado y fuerza glifos BLANCOS, ilegibles sobre el papel de Washi. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Kobo" />
+
+    <title>Kobo · 工房</title>
+
+    <!-- Anti-FOUC: resuelve el tema ANTES del primer pintado. Sin esto, arrancar en
+         Sumi provoca un fogonazo de papel claro hasta que monta React.
+         Mantener en sync con client/src/theme/theme.ts (misma lógica, sin bundle). -->
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('kobo.theme');
+          if (pref !== 'washi' && pref !== 'sumi' && pref !== 'auto') pref = 'auto';
+          var dark =
+            pref === 'sumi' ||
+            (pref === 'auto' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.setAttribute('data-theme', dark ? 'sumi' : 'washi');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          if (localStorage.getItem('kobo.mincho') === 'false')
+            root.classList.add('numbers-sans');
+          // Semilla del chrome del sistema; ThemeProvider lo reajusta leyendo --bg.
+          // Las DOS metas con el MISMO color (ver el comentario de arriba).
+          var bar = dark ? '#14110f' : '#f1eee9';
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+            m.setAttribute('content', bar);
+          });
+          // iOS lee este meta al LANZAR la app desde la pantalla de inicio: hay que
+          // dejarlo resuelto aquí, antes del primer pintado, no solo desde React.
+          var sb = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+          if (sb) sb.setAttribute('content', dark ? 'black' : 'default');
+        } catch (e) {
+          /* localStorage bloqueado (modo privado): se queda en Washi por defecto. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

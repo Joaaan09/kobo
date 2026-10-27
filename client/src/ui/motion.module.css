@@ -1,0 +1,39 @@
+/* =====================================================================
+ * Movimiento compartido (DESIGN.md §13).
+ * Piezas de animación que se repiten en más de un componente. Se consumen con
+ * `composes: reveal from '../../ui/motion.module.css'`, no copiando keyframes.
+ *
+ * Deuda conocida: `Categorias`, `AccountCard` y `views/yo` llevan su propia
+ * copia de esta misma animación (`reveal` / `catReveal`) de antes de existir
+ * este archivo. Migran cuando se toque cada una; no se refactorizan a ciegas.
+ * ===================================================================== */
+
+/**
+ * Aparición de un bloque que se despliega EN SITIO y empuja el layout
+ * (subcategorías al elegir categoría, sub-saldos al elegir cuenta). Sirve para
+ * que el salto se lea como "ha llegado algo" y no como un tirón.
+ *
+ * Úsalo solo cuando el bloque aparece por una acción del usuario. Si aparece
+ * porque acaba de llegar la respuesta de la red, mejor sin animación: mezclar
+ * ambas cosas hace que la pantalla parpadee sola mientras cargan los datos.
+ */
+.reveal {
+  animation: reveal var(--dur-2) var(--ease-out) both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+}

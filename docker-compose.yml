@@ -1,0 +1,84 @@
+services:
+  # Frontend — PWA React/Vite servida por Nginx (sirve la SPA y proxya /api al backend).
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # URL relativa: mismo origen, el nginx interno proxya /api al backend.
+        - VITE_API_URL=${VITE_API_URL:-/api}
+    container_name: kobo-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - reverse_proxy_network
+      - internal
+
+  # Backend — Node/Express + Mongoose (API bajo /api).
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: kobo-backend
+    restart: unless-stopped
+    expose:
+      - "4000"
+    environment:
+      # TZ=UTC: la lógica de rangos de mes (Europe/Madrid) en lib/time.ts asume
+      # que el proceso corre en UTC para calcular el offset con fiabilidad.
+      - TZ=UTC
+      - NODE_ENV=production
+      - PORT=4000
+      - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/kobo?authSource=admin
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CLIENT_ORIGIN=${CLIENT_ORIGIN}
+      # Web Push (VAPID). Opcionales: si faltan, el backend arranca igual y las
+      # notificaciones quedan desactivadas (`pushEnabled` en config/env.ts).
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # Base de datos — MongoDB con autenticación y volumen persistente.
+  mongo:
+    image: mongo:7
+    container_name: kobo-mongo
+    restart: unless-stopped
+    # NO publica puerto al host (§11): el backend llega a mongo por la red interna
+    # `internal`. Evita colisiones con otros mongos del mismo servidor (que
+    # pueden ocupar 127.0.0.1:27017) y reduce superficie de ataque. Para dev local se
+    # usa `npm run dev` con una Mongo aparte, no este contenedor.
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=kobo
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - kobo_mongo_data:/data/db
+    networks:
+      - internal
+
+networks:
+  # Red compartida con Nginx Proxy Manager (ya existe en el servidor; termina TLS).
+  reverse_proxy_network:
+    external: true
+  # Red privada interna del proyecto (frontend <-> backend <-> mongo).
+  internal:
+    driver: bridge
+
+volumes:
+  kobo_mongo_data:

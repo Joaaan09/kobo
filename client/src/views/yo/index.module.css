@@ -1,0 +1,808 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---------- Cabecera Yo (sello + identidad + cerrar sesión) ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.email {
+  font-size: 13px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Sección (eyebrow + tarjeta) ---------- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* El eyebrow del mockup va ligeramente sangrado respecto al borde de la tarjeta. */
+.eyebrowIndent {
+  padding-left: var(--space-2);
+}
+
+/* ---------- Tarjeta de ajustes (filas separadas por hairlines) ---------- */
+.group {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rowTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rowSub {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.rowControl {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hairline {
+  height: 1px;
+  background: var(--border);
+  margin-left: var(--space-4);
+}
+
+/* Segmentado corto (Tipo de nómina) — el control ocupa su contenedor. */
+.segShort {
+  width: 176px;
+}
+
+/* ---------- Fila-bloque: el control va a lo ancho, bajo su etiqueta ----------
+ * `.row` pone el control a la derecha con `flex: none`: perfecto para un switch
+ * o un botón, ruinoso para un segmentado de tres opciones o una tira de chips.
+ * En un móvil de 390 px la fila deja 326 px útiles; un control de ~280 px
+ * estruja el título hasta hacerlo ilegible (y en 320 px se sale de la tarjeta).
+ * Cuando el control es ancho, la fila se parte en dos alturas. */
+.blockRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--space-3) var(--space-4);
+}
+
+/* Bloque que depende del ajuste de la fila anterior (la hora bajo su
+   recordatorio): sin aire arriba y sin hairline, para que se lea como su hijo
+   y no como otro ajuste independiente. */
+.blockChild {
+  padding-top: 0;
+}
+
+.blockControl {
+  margin-top: var(--space-2);
+}
+
+/* Bloque de selección a lo ancho (chips de cuenta destino de la nómina). */
+.pickerBlock {
+  composes: blockRow;
+}
+
+.pickerChips {
+  margin-top: var(--space-2);
+}
+
+.pctSuffix {
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+/* ---------- Pie de tarjeta (nota + guardar) ---------- */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Nota que ocupa una fila entera de la tarjeta (estados sin control: navegador
+   incompatible, servidor sin claves, confirmación de un envío…). `.note` sola
+   vive dentro de bloques que ya traen padding; suelta en la tarjeta se pegaría
+   a los bordes. */
+.noteRow {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.error {
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.cardLoading {
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+}
+
+.emptyState {
+  padding: var(--space-4);
+}
+
+/* ---------- Categorías ---------- */
+.catName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: var(--r-pill);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.summaryTotal {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.summaryTotalOver {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.chipSinAsignar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px var(--space-3);
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Toggle de unidad (% / €): contenedor estrecho para el Segmented. */
+.unitSeg {
+  width: 128px;
+}
+
+/* Aviso no intrusivo del auto-ajuste ("Ajustado al máximo disponible"). */
+.notice {
+  margin: calc(var(--space-2) * -1) 0 0;
+  padding: 0 var(--space-4) var(--space-3);
+  min-height: 15px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Botón de crear (estado vacío) separado del texto de ayuda. */
+.createBtn {
+  margin-top: var(--space-4);
+}
+
+/* Envoltura del botón "Nueva categoría" al pie de la tarjeta. */
+.createWrap {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* ---------- Fila de categoría (identidad + asignación + opciones) ---------- */
+.catItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.catMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+}
+
+.catText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.catNameLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catKanji {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.catSub {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.assignControl {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Input de asignación cómodo: ancho suficiente para ver el número completo,
+   con padding lateral reducido para que no se corte ni haga scroll interno. */
+.assignInput {
+  width: 116px;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+  text-align: right;
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--ink-3);
+  transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Acciones de la categoría (aparecen al expandir). */
+.catActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 22px);
+  animation: catReveal 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.catAction {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.catAction:active {
+  transform: scale(0.98);
+  background: var(--surface);
+}
+
+.catAction:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.catActionQuiet {
+  color: var(--ink-3);
+}
+
+@keyframes catReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+  .catActions {
+    animation: none;
+  }
+}
+
+/* ---------- Hojas de categoría / subcategorías ---------- */
+.sheetRow {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Campo de asignación de la hoja (Segmented %/€ + input). */
+.assignField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.assignInputWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.assignSheetInput {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+.assignHint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: calc(var(--space-3) * -1) 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* Fila del toggle "Comodín" en el editor de categoría. */
+.comodinRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.comodinText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.comodinTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.comodinKanji {
+  font-family: var(--font-display);
+  color: var(--accent);
+}
+
+.comodinHint {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* Zona de peligro (borrar categoría) — reutiliza el patrón de Cuentas. */
+.danger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.dangerBtn {
+  align-self: flex-start;
+  color: var(--accent);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.confirmActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* Lista de subcategorías (edición en línea). */
+.subList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.subEmpty {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.subRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.subFields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.subActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.subLimitInput {
+  width: 120px;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+  text-align: right;
+}
+
+.subhead {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+/* ---------- Fondos de previsión (積立) ---------- */
+.fundFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
+}
+
+.fundNums {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.monthSuffix {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.fundHint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* Ancla del fondo a una subcategoría: etiqueta, no presupuesto (§17.3). */
+.fundSubs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fundSubsLabel {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.subAdd {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- Seguridad (cambio de contraseña) ---------- */
+.confirmNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.confirmNote span {
+  color: var(--accent);
+}
+
+.sheetForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Campo de contraseña: el botón Mostrar/Ocultar se apoya dentro del input. */
+.passwordWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  /* Deja sitio al botón Mostrar/Ocultar para que el texto no pase por debajo. */
+  padding-right: 92px;
+}
+
+.reveal {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  right: 4px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+/* Con guard (DESIGN.md §19.6). */
+@media (hover: hover) {
+  .reveal:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+}
+
+.reveal:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.sheetError {
+  margin: calc(var(--space-2) * -1) 0 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* ---------- Apariencia (tarjeta con padding, sin filas/hairlines) ---------- */
+.appearanceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Pie del selector de tema: qué piel está activa cuando manda el sistema. */
+.appearanceHint {
+  margin: calc(var(--space-1) * -1) 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.appearanceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+}
+
+.appearanceLabel {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* Etiqueta con pie: el pie muestra los propios glifos como vista previa. */
+.appearanceLabelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.appearanceSub {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+/* ---------- La app (アプリ): estado de instalación ---------- */
+
+/* Sello de "ya está": ocupa el hueco del botón de la fila para que la tarjeta no
+   cambie de altura al pasar de "instalar" a "instalada". */
+.installedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ---------- Automatización (自動): tokens de ingesta y reglas ---------- */
+
+/* Caja del token recién creado: se enseña una sola vez, así que destaca. */
+.secretBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--accent-tint);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-glow);
+}
+
+/* El token es una cadena larga sin espacios: tiene que poder partirse. */
+.secretValue {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  word-break: break-all;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  user-select: all;
+}
+
+/* Columna izquierda de una fila de dispositivo/regla (nombre + meta). */
+/* Aviso de que el último pago del Atajo no entró: acento 朱, que es el color de
+   lo que reclama atención en el resto de la app (excedido, sin asignar). */
+.tokenAlert {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.tokenMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* =====================================================================
+ * 大 lg — Ajustes en dos columnas (DESIGN.md §19.4).
+ * Dos y no `auto-fit`: a 1180 px cabrían tres columnas de tarjetas, pero
+ * estas son formularios (nómina, categorías, automatización) y a 380 px sus
+ * filas de label + control empiezan a apretarse. Dos columnas dejan cada
+ * tarjeta con el ancho de lectura que ya tiene validado en móvil, x2.
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .view {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  /* La identidad y el "Cerrar sesión" son la cabecera de la vista, no una
+     tarjeta más: cruzan la rejilla. */
+  .header {
+    grid-column: 1 / -1;
+  }
+}

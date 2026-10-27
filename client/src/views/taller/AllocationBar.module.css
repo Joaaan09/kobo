@@ -1,0 +1,32 @@
+.track {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  padding: 2px;
+  margin-top: var(--space-1);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  box-shadow: inset 0 1px 2px var(--border);
+}
+
+.seg,
+.segOver,
+.rest {
+  display: block;
+  min-width: 3px;
+  flex-basis: 0;
+  border-radius: var(--r-pill);
+}
+
+.seg {
+  background: var(--ink);
+}
+
+.segOver {
+  background: var(--accent-grad);
+}
+
+.rest {
+  background: var(--ink);
+  opacity: 0.14;
+}

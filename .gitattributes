@@ -1,0 +1,16 @@
+# Normalización de fin de línea: LF en el repo, siempre.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.woff2 binary
+
+# Estadísticas de lenguaje en GitHub (Linguist).
+# Los extractos de mockup son referencia de diseño, no código de la app: no deben
+# contar como lenguaje del repo ni ensuciar los diffs de los PR.
+client/.design-ref/** linguist-documentation
+
+# El index.html real de la SPA sí es código del proyecto.
+client/index.html     linguist-detectable
+
+# Los lockfiles no cuentan como código propio y se colapsan en las revisiones.
+package-lock.json     linguist-generated

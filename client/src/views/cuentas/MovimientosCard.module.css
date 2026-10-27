@@ -1,0 +1,92 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.arrow {
+  color: var(--ink-4, var(--ink-3));
+  font-family: var(--font-display);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* Sobre de ahorro que consumió el movimiento: punto de color + nombre, el mismo
+   patrón que las filas de Gastos. El color lo pone el dato de la categoría. */
+.cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-2);
+}
+
+.cat::after {
+  content: '·';
+  color: var(--ink-3);
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+}
+
+.amount {
+  font-family: var(--font-numbers, var(--font-display));
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.more {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}

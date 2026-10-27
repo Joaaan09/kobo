@@ -1,0 +1,163 @@
+/* =====================================================================
+ * Kobo — tokens del sistema de diseño (fuente: DESIGN.md §3–§4)
+ * Regla dura: los componentes usan SOLO estos tokens. Cero colores literales.
+ * Tema por atributo en <html data-theme="washi|sumi">. El atributo lleva SIEMPRE el
+ * tema *resuelto*: "Auto" lo resuelve JS (script anti-FOUC de index.html + ThemeProvider)
+ * contra prefers-color-scheme. Así este archivo solo describe dos pieles, sin duplicar
+ * los valores de Sumi en un @media que se desincroniza.
+ * ===================================================================== */
+
+:root {
+  /* Tipografía */
+  --font-display: 'Shippori Mincho', Georgia, 'Times New Roman', serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  /* Solo para datos técnicos que se copian carácter a carácter (tokens, URLs).
+     Fuentes del sistema: no se autoaloja ninguna mono. */
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  /* Espaciado */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px;
+
+  /* Radios */
+  --r-xs: 3px; --r-sm: 6px; --r-md: 12px; --r-lg: 22px; --r-xl: 26px; --r-pill: 99px;
+
+  /* Glass */
+  --glass-blur: blur(20px) saturate(160%);
+
+  /* Layout (DESIGN.md §19.2). Móvil manda: `--shell-max` es la columna de
+   * siempre; los dos umbrales (768 / 1024) la reescriben. Los literales de las
+   * media queries NO pueden ser tokens (una @media no lee var()), así que van a
+   * mano en cada archivo; lo que sí es token es todo lo demás. */
+  --shell-max: 460px;   /* ancho de la columna en móvil */
+  --content-max: 1180px; /* ancho útil del contenido en escritorio */
+  --rail: 232px;        /* rail de navegación lateral (lg) */
+  --header-h: 60px;     /* alto de la cabecera sticky: base de los `top` de sticky */
+
+  /* Movimiento (DESIGN.md §13). Curvas y duraciones del sistema: usa estos
+   * tokens en vez de literales nuevos. Los valores sueltos que quedan en
+   * componentes antiguos son deuda; migran cuando se toque cada uno. */
+  --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1); /* por defecto: entrar/salir/press */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);    /* SOLO hojas: arranca decidido, frena largo */
+  --dur-1: 140ms;  /* press, hover, color: la duración por defecto */
+  --dur-2: 200ms;  /* despliegues in-situ (chevrón, reveal) */
+  --dur-sheet-in:  340ms;
+  --dur-sheet-out: 240ms;
+}
+
+/* ---------- 和紙 Washi (claro, por defecto) ---------- */
+:root,
+[data-theme='washi'] {
+  /* Controles nativos, scrollbars, autofill y overscroll en su variante clara. */
+  color-scheme: light;
+
+  --bg:            #f1eee9;
+  --surface:       #fcfaf6;
+  --surface-2:     #f7f3ec;
+  --surface-glass: rgba(252, 250, 246, 0.72);
+  --accent-tint:   #fff4ef;
+
+  --ink:    #1b1815;
+  --ink-2:  rgba(27, 24, 21, 0.75);
+  --ink-3:  rgba(27, 24, 21, 0.55);
+  --ink-4:  rgba(27, 24, 21, 0.42);
+  --on-accent: #fff6f2;
+
+  --border:        rgba(27, 24, 21, 0.10);
+  --border-strong: rgba(27, 24, 21, 0.16);
+
+  --accent:        #c9553b;
+  --accent-2:      #e0664a;
+  --accent-strong: #98301b;
+  --accent-grad:   linear-gradient(160deg, #c0472e, #98301b);
+  --accent-glow:   rgba(224, 102, 74, 0.55);
+
+  --shadow-card:   0 1px 1px rgba(27, 24, 21, 0.04), 0 10px 24px -16px rgba(27, 24, 21, 0.18);
+  --shadow-raised: 0 1px 1px rgba(27, 24, 21, 0.05), 0 14px 30px -18px rgba(27, 24, 21, 0.22);
+  --shadow-glow:   0 0 18px -4px var(--accent-glow);
+
+  /* Velo tras las hojas inferiores: tinta, no negro puro. */
+  --scrim:         rgba(27, 24, 21, 0.42);
+}
+
+/* ---------- 墨 Sumi (oscuro) ---------- */
+[data-theme='sumi'] {
+  color-scheme: dark;
+
+  --bg:            #14110f;
+  --surface:       #1f1b18;
+  --surface-2:     #241f1a;
+  --surface-glass: rgba(20, 17, 15, 0.62);
+  --accent-tint:   #2a1215;
+
+  --ink:    #f1eee9;
+  --ink-2:  rgba(241, 238, 233, 0.80);
+  --ink-3:  rgba(241, 238, 233, 0.55);
+  --ink-4:  rgba(241, 238, 233, 0.42);
+  --on-accent: #fff6f2;
+
+  --border:        rgba(241, 238, 233, 0.10);
+  --border-strong: rgba(241, 238, 233, 0.16);
+
+  --accent:        #d3573c;
+  --accent-2:      #e0664a;
+  --accent-strong: #a5361d;
+  --accent-grad:   linear-gradient(160deg, #d3573c, #a5361d);
+  --accent-glow:   rgba(224, 102, 74, 0.60);
+
+  --shadow-card:   0 1px 2px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-raised: 0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-glow:   0 0 18px -4px var(--accent-glow);
+
+  /* Sobre tinta hace falta más densidad para separar la hoja del fondo. */
+  --scrim:         rgba(0, 0, 0, 0.62);
+}
+
+/* ---------- Ancho de la columna por umbral (DESIGN.md §19.1) ----------
+ * 中 `md`: la columna se suelta de los 460 px de móvil. La navegación sigue
+ * abajo y las hojas siguen siendo hojas: una tableta se sostiene con las manos.
+ * A partir de 大 `lg` el ancho ya no lo manda esta variable sino `--content-max`
+ * (el shell pasa a rail + rejilla). */
+@media (min-width: 768px) {
+  :root {
+    --shell-max: 680px;
+  }
+}
+
+/* ---------- Reset mínimo ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+/* El papel/tinta se pinta también en <html>, no solo en <body>: es el color con el que
+ * el webview rellena lo que el contenido no cubre (franjas de safe-area del notch y del
+ * indicador de inicio, rebote del scroll). Sin esto asoma el fondo por defecto del
+ * webview, que en un móvil en modo oscuro es negro aunque Kobo esté en Washi. */
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

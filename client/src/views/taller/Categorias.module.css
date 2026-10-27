@@ -1,0 +1,334 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--space-1);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.legend {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.card {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+/*
+ * Aviso "comodín sin repartir": la puerta principal al reparto del mes, sobre la
+ * lista. Solo existe mientras queda dinero sin repartir (§17.4.1) — al terminar
+ * el reparto desaparece, así que puede permitirse el borde de acento.
+ */
+.aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--r-lg);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  box-shadow: var(--shadow-card);
+}
+
+.avisoText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.avisoLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.avisoKanji {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.avisoLine {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.avisoName {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.avisoBtn {
+  flex: none;
+  min-height: 40px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item + .item {
+  border-top: 1px solid var(--border);
+}
+
+/* Alto de la cabecera sticky: al subir una fila abierta, que no quede debajo. */
+.item {
+  scroll-margin-top: calc(env(safe-area-inset-top) + 76px);
+}
+
+/*
+ * Disparador del acordeón: la fila ENTERA es el botón, no un botón pequeño con un
+ * ::after estirado. Un pseudoelemento que se sale de su <button> no es un objetivo
+ * táctil fiable (WebKit no lo acierta), así que media fila quedaba muerta al tocar.
+ * Dentro solo va phrasing content: por eso ProgressBar y Money renderizan <span>.
+ */
+.row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.rowOpen {
+  background: var(--surface-2);
+}
+
+/* Sin tap-highlight del sistema (global.css), el toque necesita su propio acuse.
+   La fila abierta ya está en --surface-2, así que al pulsarla vuelve a --surface:
+   el acuse se ve igual de claro al plegar que al desplegar. */
+.row:active {
+  background: var(--surface-2);
+}
+
+.rowOpen:active {
+  background: var(--surface);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.chev {
+  flex: none;
+  color: var(--ink-4);
+  transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.chevOpen {
+  transform: rotate(180deg);
+  color: var(--ink-3);
+}
+
+/* Región desplegada con el desglose de la categoría. */
+.region {
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  animation: reveal 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chev {
+    transition: none;
+  }
+  .region {
+    animation: none;
+  }
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Solo el texto del nombre cede y recorta con puntos suspensivos: las marcas
+ * (kanji, 割 comodín, 貯 ahorro) son identidad de la fila y nunca se cortan. */
+.nameText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanji {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+/* Marca de comodín en la fila: identifica la categoría en la lista, sin importe. */
+.tagComodin {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent);
+  font-family: var(--font-display);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
+/* Estado del reparto bajo la barra: pendiente (acento) o ya repartido (tenue). */
+.repartoNote {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.repartoPending {
+  color: var(--accent);
+}
+
+.amount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: none;
+  font-family: var(--font-numbers, var(--font-display));
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.amountOver {
+  color: var(--accent-strong);
+}
+
+.slash {
+  color: var(--ink-4);
+}
+
+/* % de reparto de la nómina, apoyo del importe asignado: más pequeño y tenue. */
+.percent {
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.percent::before {
+  content: '·';
+  margin-right: 4px;
+  color: var(--ink-4);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.count {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.chipAlert {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Hover con guard (DESIGN.md §19.6): la fila entera es el botón que despliega
+   el desglose, y en escritorio nada lo delataba hasta pulsarla. */
+@media (hover: hover) {
+  .row:hover {
+    background: var(--surface-2);
+  }
+
+  .rowOpen:hover {
+    background: var(--surface-2);
+  }
+}

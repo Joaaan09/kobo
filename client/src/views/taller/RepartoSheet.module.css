@@ -1,0 +1,174 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.intro strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* Resumen: repartible vs. queda por repartir. */
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.summaryItem + .summaryItem {
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border);
+}
+
+.summaryLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.summaryValue {
+  font-size: 17px;
+  color: var(--ink);
+  font-family: var(--font-numbers);
+}
+
+.over {
+  color: var(--accent-strong);
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-3) 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+}
+
+/* Lista de destinos. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row + .row {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: var(--r-pill);
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Recorta solo el texto: el kanji que lo acompaña no se corta a medias. */
+.rowNameText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowKanji {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.amountWrap {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.amountInput {
+  width: 116px;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+  text-align: right;
+}
+
+.euro {
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+/* Chips de subcategoría opcional, sangradas bajo el punto de color. */
+.subs {
+  padding-left: calc(10px + var(--space-3));
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* Pie: cuánto queda sin repartir + guardar. */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.actionsHint {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}

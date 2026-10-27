@@ -1,0 +1,81 @@
+# =====================================================================
+# Kobo — qué NO va al repositorio
+# =====================================================================
+
+# ----- Dependencias -----
+node_modules/
+
+# ----- Builds y artefactos de compilación -----
+dist/
+build/
+*.tsbuildinfo
+# tsc emite estos junto a vite.config.ts al compilar el tsconfig.node
+client/vite.config.js
+client/vite.config.d.ts
+
+# ----- Entorno / secretos -----
+# Cualquier variante (.env.production, .env.backup, .env.old…) salvo la plantilla.
+.env
+.env.*
+*.env
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+*.crt
+# Claves VAPID u otras generadas a mano y guardadas en un fichero suelto.
+vapid*.json
+secrets/
+
+# ----- Logs -----
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----- Datos locales -----
+# Kobo guarda finanzas personales: ningún volcado, backup o export de la base de
+# datos debe acabar en el repo, ni siquiera "un momento".
+# Carpetas ancladas a la raíz (`/…`): sin ancla, `data/` ignoraba también
+# `client/src/data/`, que es código fuente. Las extensiones sí valen en cualquier sitio.
+/data/
+/dump/
+/backup/
+/backups/
+*.bson
+*.archive
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+coverage/
+
+# ----- Sistema / editor -----
+.DS_Store
+Thumbs.db
+.vite
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ----- Arnés de trabajo -----
+# Bitácora interna del proyecto e instrucciones para agentes: son notas de trabajo
+# (peticiones textuales, decisiones, deuda) y se quedan en local, fuera del repo.
+.progreso/
+CLAUDE.md
+CLAUDE.local.md
+# Ajustes locales de Claude Code (pueden llevar rutas/permisos de la máquina).
+.claude/settings.local.json
+# Skills de terceros instaladas en local (Emil Kowalski et al.): no son código de
+# Kobo y tienen su propia licencia, así que no se redistribuyen desde aquí.
+# `skills-lock.json` fija el origen y el hash para poder reinstalarlas.
+.claude/skills/*
+!.claude/skills/README.md
+
+# ----- Mockups de diseño -----
+# Bundles offline de ~1 MB. Son la fuente de verdad visual (CLAUDE.md §5) pero
+# viven fuera del repo por peso; la doctrina destilada está en DESIGN.md.
+KOBO App (offline).html
+KOBO Logo (offline).html

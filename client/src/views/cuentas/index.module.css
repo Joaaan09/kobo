@@ -1,0 +1,138 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Hero: patrimonio total. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.heroAmount {
+  font-family: var(--font-numbers, var(--font-display));
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.heroMeta {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+/* Lista de cuentas. */
+.accounts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Envoltorios de columna: invisibles al layout en móvil (DESIGN.md §19.4). */
+.side,
+.stack {
+  display: contents;
+}
+
+/* Botón "+ Añadir cuenta". */
+.add {
+  margin-top: var(--space-1);
+}
+
+/* Estados (loading / vacío / error). */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) 0;
+}
+
+.stateCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.stateText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* =====================================================================
+ * 中 md — Las cuentas se reparten en rejilla (DESIGN.md §19.4).
+ * ===================================================================== */
+@media (min-width: 768px) {
+  .accounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    /* Las cuentas se despliegan: una expandida no debe estirar a sus vecinas. */
+    align-items: start;
+  }
+}
+
+/* =====================================================================
+ * 大 lg — Principal + costado (DESIGN.md §19.4), como Taller y Gastos.
+ *
+ * El primer intento repartía esta vista en rejilla fluida a todo lo ancho, y
+ * dejaba tres agujeros de aire: un hero de 1180 px para una cifra de 230, las
+ * cuentas cayendo en tres columnas con la última huérfana, y el botón flotando
+ * junto a ese hueco. La lista de cuentas es la que crece; el patrimonio total
+ * es un titular. Eso es un costado, no una fila.
+ *
+ * Fila 1: patrimonio (izq, fijo) | cuentas + añadir (der).
+ * Fila 2: Rendimiento (izq, es una cifra) | Movimientos (der, es una lista y
+ * agradece el ancho). Caen ahí solos por orden de rejilla, sin colocarlos.
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .view {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) 1fr;
+    align-items: start;
+    gap: var(--space-5) var(--space-6);
+  }
+
+  .side,
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    align-self: start;
+    min-width: 0;
+  }
+
+  .side {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-4));
+  }
+
+  /* El antetítulo y los estados de carga/error no reparten nada: cruzan.
+     `.stateCard` aparece en dos sitios —como error de carga (hijo de la rejilla)
+     y como "aún no hay cuentas" (dentro de `.stack`)—; en el segundo es un flex
+     item y `grid-column` se ignora, así que la regla no le hace nada. */
+  .eyebrow,
+  .loading,
+  .stateCard {
+    grid-column: 1 / -1;
+  }
+
+  /* En una columna de ~760 px caben dos cuentas por fila: cuatro cuentas son
+     2×2 y no queda ninguna suelta. Baja de 320 a 300 el mínimo para que el
+     reparto aguante también con el rail en pantallas de 1280. */
+  .accounts {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* El botón de acento no tiene por qué medir lo que la columna. Se acota con
+     `max-width` y no con `width`: el `block` del Button ya declara `width: 100%`
+     con la misma especificidad, y quién gana dependería del orden en que Vite
+     concatene los módulos. `max-width` no compite, recorta. */
+  .add {
+    max-width: 320px;
+  }
+}

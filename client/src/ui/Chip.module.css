@@ -1,0 +1,48 @@
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--ink-2);
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.chip:active {
+  transform: scale(0.98);
+}
+
+.selected {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  flex: none;
+}
+
+/* Hover con guard (DESIGN.md §19.6). El chip seleccionado NO cambia: su estado
+   (acento + borde) es información, y moverlo al pasar por encima haría dudar
+   de si el filtro sigue activo. */
+@media (hover: hover) {
+  .chip:hover:not(.selected):not(:disabled) {
+    border-color: var(--border-strong);
+    color: var(--ink);
+  }
+}

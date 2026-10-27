@@ -1,0 +1,453 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+/* --- Estados (carga / error) --- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+}
+
+.stateText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* --- El sobre: asignado · gastado · queda --- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stat + .stat {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--border);
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.statValue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.statOver {
+  color: var(--accent-strong);
+}
+
+/* % de reparto de la nómina, en línea aparte bajo el asignado: apoyo tenue. */
+.statPct {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reservado a fondos: apoyo tenue bajo el sobre. */
+.reservedNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+/* Recibido de un comodín: explica por qué subió el asignado (§17.4.1). */
+.receivedNote {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.receivedKanji {
+  font-family: var(--font-display);
+  font-size: 11px;
+}
+
+/* --- Módulo comodín (reparto del mes) --- */
+/* Caja del comodín: cabecera de reparto + a dónde va, como un solo bloque. */
+.comodinBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--accent-tint);
+  border: 1px solid var(--border);
+}
+
+.comodin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.comodinInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comodinLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.comodinKanji {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.comodinAmount {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.comodinBtn {
+  flex: none;
+  min-height: 40px;
+}
+
+/* A dónde va el dinero del comodín este mes: una fila por destino. */
+.destinos {
+  margin: 0;
+  padding: var(--space-2) 0 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.destino {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 13px;
+}
+
+.destinoName {
+  min-width: 0;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.destinoAmount {
+  flex: none;
+  font-family: var(--font-numbers, var(--font-display));
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Comodín aún sin reparto: se explica qué hacer, en el sitio donde se hace. */
+.comodinHint {
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* --- Bloques (fondos / subcategorías / movimientos) --- */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.blockKanji {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+}
+
+/* --- Fondos de previsión (積立): hucha por fondo --- */
+.funds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fund {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fund .subBar {
+  height: 6px;
+}
+
+/* Huchas ancladas a una subcategoría: cuelgan de su fila, sangradas y con un
+   filete que las ata visualmente a ella (§17.3). */
+.subFunds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 var(--space-3);
+  border-left: 1px solid var(--border);
+  list-style: none;
+}
+
+.fundsCta {
+  margin-top: var(--space-3);
+}
+
+.fundKanji {
+  margin-left: 6px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.fundMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.fundReady {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.fundPaid {
+  color: var(--ink-3);
+}
+
+.blockTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+/* --- Reparto por subcategoría --- */
+.subs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sub {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.subName {
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subAmount {
+  display: inline-flex;
+  align-items: baseline;
+  flex: none;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.subOver {
+  color: var(--accent-strong);
+}
+
+.subLimit {
+  color: var(--ink-4);
+}
+
+/* Lo que queda de su límite: apoyo tenue bajo la barra, alineado con las cifras. */
+.subMeta {
+  align-self: flex-end;
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Excedido: doble clase para ganar al `color` de `.subMeta` (misma especificidad, va después). */
+.subMeta.subOver {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+/* Extra recibido este mes de un comodín, afinado a esta subcategoría: explica por
+   qué subió su límite del mes (§17.4.1). Alineado a la derecha con las cifras. */
+.subReceived {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--accent);
+}
+
+.subReceivedKanji {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+}
+
+/* Doble clase: gana en especificidad al `.track` de la primitiva (8px). */
+.sub .subBar {
+  height: 5px;
+}
+
+/* --- Movimientos --- */
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 7px 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.date {
+  flex: none;
+  width: 52px;
+  font-size: 12px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+/* Recorta solo el texto: la etiqueta de subcategoría nunca se corta a medias. */
+.labelText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink-4);
+}
+
+.amount {
+  flex: none;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* --- Salida a la vista Gastos --- */
+.more {
+  min-height: 44px;
+  font-size: 13px;
+}

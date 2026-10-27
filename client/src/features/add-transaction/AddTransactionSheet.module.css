@@ -1,0 +1,107 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-2);
+}
+
+.amountInput {
+  /* Ocupa el ancho disponible de la hoja (menos el € y el padding). `min-width: 0`
+   * permite que encoja dentro del flex en vez de forzar scroll interno. */
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: right;
+  font-family: var(--font-numbers, var(--font-display));
+  font-variant-numeric: tabular-nums;
+  /* Escala con el ancho del viewport: importes largos (6-7 dígitos) caben enteros
+   * sin scroll interno, también en móviles estrechos; tope 44px en pantallas amplias. */
+  font-size: clamp(30px, 9vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.amountInput::placeholder {
+  color: var(--ink-4);
+}
+
+.amountInput:focus-visible {
+  outline: none;
+}
+
+.amountCurrency {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--ink-3);
+}
+
+/* Carriles secundarios de chips: subcategoría, pago de fondo, sub-saldo. Los
+ * tres aparecen SIEMPRE por una elección del usuario dentro de la hoja ya
+ * abierta (elegir categoría, elegir cuenta), nunca por la carga inicial: por
+ * eso se revelan. El carril principal (Categoría / Cuenta) no lleva reveal —
+ * ese sí llega con la red y parpadearía solo al abrir. */
+.buckets {
+  composes: reveal from '../../ui/motion.module.css';
+  margin-top: var(--space-2);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.grow {
+  flex: 1;
+  /* Sin esto el campo no encoge por debajo de su contenido y desborda la fila. */
+  min-width: 0;
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* Fila del interruptor "Afecta a mi patrimonio" (mismo patrón que el toggle del comodín). */
+.patrimonyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.patrimonyText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.patrimonyTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.patrimonyHint {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}

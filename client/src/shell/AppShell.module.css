@@ -1,0 +1,377 @@
+.shell {
+  min-height: 100dvh;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Cabecera (sticky, glass) ---------- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--space-4) var(--space-3);
+  background: var(--surface-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border);
+  /* Chrome de la app: nada que seleccionar (evita la lupa de iOS al mantener). */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+}
+
+.month {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+}
+
+.month button {
+  width: 36px;
+  height: 36px;
+}
+
+.monthName {
+  min-width: 74px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* El nombre entra desplazado EN EL SENTIDO DEL SALTO (DESIGN.md §13): pulsar ›
+ * lo trae desde la derecha, ‹ desde la izquierda. No es adorno: sin él, el mes
+ * cambia de golpe y no queda pista de hacia dónde te has movido en el tiempo.
+ *
+ * 6px, no más: el contenedor no recorta (`overflow: hidden` cortaría la cola de
+ * la "g" de "Agosto"), así que el recorrido tiene que caber en el hueco propio.
+ * `data-dir="0"` (primer render) no anima: la cabecera no parpadea al arrancar. */
+.monthNameInner {
+  display: inline-block;
+  animation: mesEntrar var(--dur-2) var(--ease-out) both;
+}
+
+.monthNameInner[data-dir='1'] {
+  --mes-desde: 6px;
+}
+
+.monthNameInner[data-dir='-1'] {
+  --mes-desde: -6px;
+}
+
+.monthNameInner[data-dir='0'] {
+  animation: none;
+}
+
+@keyframes mesEntrar {
+  from {
+    opacity: 0;
+    transform: translateX(var(--mes-desde, 0px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monthNameInner {
+    animation: none;
+  }
+}
+
+/* ---------- Contenido ---------- */
+.main {
+  flex: 1;
+  padding: var(--space-5) var(--space-4) calc(104px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---------- Barra inferior (fija, glass) ---------- */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--border);
+  -webkit-user-select: none;
+  user-select: none;
+  /* Promoción a capa de composición propia (igual que el FAB). En iOS
+     Safari/PWA un `position: fixed` con `backdrop-filter` pero SIN capa propia
+     puede "congelarse" en una posición vieja tras scroll/teclado hasta un
+     repaint, y la barra queda flotando a media pantalla. `translateZ(0)` la
+     saca a su propia capa y estabiliza el fijado; no desplaza en X, así que el
+     centrado (`max-width` + `margin: 0 auto`) se mantiene intacto. La nav no
+     tiene hijos `position: fixed`, por lo que el nuevo containing block que
+     crea el transform es inocuo. */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Los 5 destinos. El reparto en columnas vive aquí y no en la `.nav` porque en
+   escritorio la nav pasa a ser un rail con marca arriba y botón abajo: si el
+   grid estuviera en la nav, esos dos entrarían como celdas del reparto. */
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Marca del rail y botón "+ Añadir" del rail: solo existen en escritorio
+   (en móvil la marca vive en la cabecera y el añadir es el FAB). */
+.railBrand,
+.railAdd {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+  padding: var(--space-2) 0;
+  border-radius: var(--r-md);
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--dur-1) ease;
+}
+
+/* Kanji del destino: ocupa la MISMA caja que el icono SVG (24px) para que
+   conmutar entre ambos no mueva la barra. Decorativo (aria-hidden). */
+.tabKanji {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+}
+
+.tabLabel {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tabActive {
+  color: var(--accent);
+}
+
+/* ---------- FAB añadir (píldora de acento, elevada sobre la barra) ---------- */
+.fab {
+  position: fixed;
+  left: 50%;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--accent-grad);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-glow), var(--shadow-raised);
+  transition: transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 140ms ease;
+}
+
+.fab:active {
+  transform: translateX(-50%) scale(0.96);
+  box-shadow: 0 0 28px -2px var(--accent-glow), var(--shadow-raised);
+}
+
+/* =====================================================================
+ * 大 lg — Shell de escritorio (DESIGN.md §19.3).
+ * La navegación deja de ser una barra bajo el pulgar y pasa a rail lateral
+ * fijo; la marca sube al rail y la cabecera se queda solo con el mes.
+ * Todo va DENTRO del @media: si esta regla desapareciera, la app sería
+ * exactamente la de móvil (§19.7).
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .shell {
+    max-width: none;
+    margin: 0;
+    /* El rail es `fixed` (no una columna de grid): así se mantiene entero al
+       hacer scroll sin depender de un contenedor con altura. El hueco se
+       reserva aquí, con padding, que es lo que no rompe nada del móvil. */
+    padding-left: var(--rail);
+  }
+
+  /* La cabecera pierde la marca y se queda con el mes. `padding-inline` con el
+     mismo cálculo que `.main`: el selector queda a plomo con la primera
+     tarjeta del contenido, no flotando en el borde de la ventana. */
+  .header {
+    justify-content: flex-start;
+    /* La safe-area superior se conserva (un iPad apaisado también entra aquí);
+       lo que cambia es el lateral, que se alinea con el contenido. */
+    padding: calc(env(safe-area-inset-top) + var(--space-3))
+      max(var(--space-6), calc((100% - var(--content-max)) / 2)) var(--space-3);
+    min-height: var(--header-h);
+  }
+
+  .brand {
+    display: none;
+  }
+
+  /* El contenido se centra con `margin-inline: auto`, no con un padding
+     porcentual: un `%` dentro de `padding` se resuelve contra el bloque
+     contenedor, y basta con que alguien toque el ancho de `.shell` para que el
+     centrado se descoloque sin que nada lo delate. `max-width` + `auto` no
+     depende de eso. La cabecera SÍ conserva el padding: su vidrio y su borde
+     inferior tienen que cruzar la ventana entera, y ambos cálculos dan el mismo
+     borde izquierdo —(W−1228)/2 + 24 = (W−1180)/2—, así que el mes sigue a
+     plomo con la primera tarjeta. */
+  .main {
+    width: 100%;
+    max-width: calc(var(--content-max) + var(--space-6) * 2);
+    margin-inline: auto;
+    padding: var(--space-6) var(--space-6) var(--space-8);
+    gap: var(--space-6);
+  }
+
+  /* ---------- Rail lateral ---------- */
+  .nav {
+    top: 0;
+    bottom: 0;
+    right: auto;
+    width: var(--rail);
+    max-width: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) var(--space-5);
+    border-top: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .railBrand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-2);
+  }
+
+  .tabs {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    /* Empuja el "+ Añadir" al fondo del rail sin depender de márgenes mágicos. */
+    flex: 1;
+    align-content: start;
+  }
+
+  /* Los destinos pasan a fila: glifo a la izquierda, etiqueta a la derecha. */
+  .tab {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    transition: color var(--dur-1) ease, background-color var(--dur-1) ease;
+  }
+
+  .tabLabel {
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+
+  .tabKanji {
+    font-size: 19px;
+  }
+
+  /* A lo ancho de un rail el color por sí solo no dice "estoy aquí": el activo
+     necesita una superficie que lo sostenga (DESIGN.md §19.3). */
+  .tabActive {
+    background: var(--accent-tint);
+  }
+
+  /* El hover va con guard (§19.6): sin él, en un portátil táctil el estado se
+     queda pegado tras el toque. Y no mueve nada de sitio, solo tinta. */
+  @media (hover: hover) {
+    .tab:hover {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
+
+    .tabActive:hover {
+      color: var(--accent);
+      background: var(--accent-tint);
+    }
+  }
+
+  /* El FAB centrado no tiene sentido con la navegación a un lado: su acción
+     pasa al pie del rail, ya con etiqueta (hay sitio de sobra para decirlo). */
+  .fab {
+    display: none;
+  }
+
+  .railAdd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--r-pill);
+    background: var(--accent-grad);
+    color: var(--on-accent);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-glow), var(--shadow-raised);
+    transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) ease;
+  }
+
+  .railAdd:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 28px -2px var(--accent-glow), var(--shadow-raised);
+  }
+
+  @media (hover: hover) {
+    .railAdd:hover {
+      box-shadow: 0 0 26px -2px var(--accent-glow), var(--shadow-raised);
+    }
+  }
+}

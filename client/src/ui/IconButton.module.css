@@ -1,0 +1,46 @@
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.iconBtn:active {
+  transform: scale(0.96);
+}
+
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ghost:active {
+  background: var(--surface-2);
+}
+
+.quiet {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.quiet:active {
+  background: var(--surface);
+}
+
+/* Hover con guard (DESIGN.md §19.6): en escritorio un icono sin texto necesita
+   acusar que es accionable antes de pulsarlo. */
+@media (hover: hover) {
+  .iconBtn:hover:not(:disabled) {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+
+  .quiet:hover:not(:disabled) {
+    background: var(--surface);
+  }
+}

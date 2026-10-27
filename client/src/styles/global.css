@@ -1,0 +1,84 @@
+/* =====================================================================
+ * Kobo — estilos globales de la app (complementan tokens.css).
+ * Mecanismo "Cifras en Mincho": el token --font-numbers manda en las cifras.
+ *   · Por defecto = Mincho (display).
+ *   · Con la clase `numbers-sans` en <html> (mincho OFF) = system sans.
+ * ===================================================================== */
+
+:root {
+  --font-numbers: var(--font-display);
+}
+
+html.numbers-sans {
+  --font-numbers: var(--font-ui);
+}
+
+/* La app ocupa todo el alto; el scroll vive en el documento (window/body). */
+#root {
+  min-height: 100%;
+}
+
+/* =====================================================================
+ * Comportamiento táctil (PWA móvil) — DESIGN.md §15.
+ * Objetivo: que dentro de la ventana standalone se sienta app, no página.
+ * ===================================================================== */
+
+html {
+  /* iOS reescala el texto por su cuenta (rotación, columnas anchas): parece zoom. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Mata el zoom por doble toque y su retardo de ~300 ms; el pan/scroll sigue igual. */
+  touch-action: manipulation;
+  /* Sin rubber-band ni pull-to-refresh: la ventana de la app no se "despega". */
+  overscroll-behavior: none;
+}
+
+body {
+  overscroll-behavior: none;
+  /* Flash gris del navegador al tocar: cada control ya tiene su propio :active. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Suelo de 16px en controles de texto: por debajo, iOS hace zoom al enfocar y NO
+ * lo deshace al salir. Quien declare su propio tamaño con clase lo pisa (mayor
+ * especificidad); esto solo cubre lo que se olvide. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Los controles no son texto seleccionable: mantener pulsado sacaba la lupa y el
+ * menú de selección de iOS. El contenido (importes, notas) sigue seleccionable. */
+button,
+a,
+label,
+summary,
+[role='button'] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Reset de <dialog> (lo usan las hojas inferiores). */
+dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  max-width: none;
+  max-height: none;
+}
+
+/* Utilidad de accesibilidad: oculta visualmente pero deja para lectores. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

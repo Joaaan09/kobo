@@ -1,0 +1,110 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Envoltorios de columna: invisibles al layout en móvil (DESIGN.md §19.4). */
+.side,
+.stack {
+  display: contents;
+}
+
+/* Estados loading / error, centrados y con aire. */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 40vh;
+  text-align: center;
+}
+
+.stateText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* Estado vacío (sin nómina o sin categorías). */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40vh;
+  justify-content: center;
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+.emptyKanji {
+  font-family: var(--font-display);
+  font-size: 40px;
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.emptyText {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.add {
+  margin-top: var(--space-1);
+  min-height: 50px;
+  font-size: 16px;
+}
+
+/* =====================================================================
+ * 大 lg — Taller a dos columnas (DESIGN.md §19.4, patrón "principal + costado").
+ * Izquierda: el resumen del mes (cuánto queda, a qué ritmo) — lo que quieres
+ * tener delante mientras repasas en qué se ha ido. Va `sticky`: en una lista
+ * larga de categorías, perder de vista la cifra grande es perder el hilo.
+ * Derecha: las categorías, que son la lista que crece.
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .view {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) 1fr;
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  .side,
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    /* `start` (no el `stretch` por defecto): un item estirado no puede pegarse. */
+    align-self: start;
+  }
+
+  .side {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-4));
+  }
+
+  /* Los estados (carga, error, vacío) no tienen dos columnas que repartir. */
+  .state,
+  .empty {
+    grid-column: 1 / -1;
+  }
+}

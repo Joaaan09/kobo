@@ -1,0 +1,212 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Tarjeta de mes (es un <button>: reset + layout) ----------------------- */
+
+.month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+/* Con guard (DESIGN.md §19.6): en táctil el borde se quedaba marcado tras el toque. */
+@media (hover: hover) {
+  .month:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.month:active {
+  transform: scale(0.99);
+}
+
+.month:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.monthHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.monthName {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.chev {
+  flex: none;
+  color: var(--ink-4);
+}
+
+.amounts {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.gastado {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.presupuesto {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.bar {
+  margin-top: var(--space-1);
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.used {
+  font-family: var(--font-numbers, var(--font-display));
+  color: var(--ink-2);
+}
+
+.metaRight {
+  color: var(--ink-3);
+}
+
+.ingresos {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+/* Patrimonio del mes: variación y su descomposición ---------------------- */
+
+.patrimonio {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.patLabel {
+  color: var(--ink-3);
+}
+
+.patDelta {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Las dos patas (aportado · rendimiento) son apoyo: no compiten con el total. */
+.patSplit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  width: 100%;
+  color: var(--ink-3);
+}
+
+.patPart {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Comparativa con el mes anterior (sin verde: acento sube, muted baja) --- */
+
+.deltaUp,
+.deltaDown,
+.deltaFlat {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.deltaUp {
+  color: var(--accent);
+}
+
+.deltaDown,
+.deltaFlat {
+  color: var(--ink-3);
+}
+
+/* Estado vacío ---------------------------------------------------------- */
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* =====================================================================
+ * 中 md — El histórico se reparte en rejilla (DESIGN.md §19.4).
+ * Las tarjetas de mes son homogéneas y se comparan de un vistazo: es el caso
+ * de libro de la rejilla fluida, y no necesita más umbrales que este.
+ * `auto-fill` + `minmax`: el número de columnas lo decide el ancho, no yo.
+ * ===================================================================== */
+@media (min-width: 768px) {
+  .list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Cada tarjeta con su alto (unas llevan bloque de patrimonio y otras no);
+       sin esto, todas las de una fila se estiran a la más alta. */
+    align-items: start;
+  }
+}

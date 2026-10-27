@@ -1,0 +1,150 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-raised);
+}
+
+/* Halo cálido del acento en la esquina superior derecha (muy tenue). */
+.glow {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  opacity: 0.12;
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+  pointer-events: none;
+}
+
+/* Sello vertical del mes (八月の予算), decoración silenciosa. */
+.kanji {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-4);
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  color: var(--ink-4);
+  pointer-events: none;
+}
+
+/* Carril del carrusel: desliza horizontalmente con anclaje nativo. Los adornos
+   (glow, kanji) viven en `.hero` y no se mueven; solo se desplazan las láminas. */
+.track {
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Puntos: un objetivo táctil de 24px con el punto dibujado en `::before`. */
+.dots {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.dot {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--ink-4);
+  opacity: 0.5;
+  transition:
+    width var(--dur-2) var(--ease-out),
+    opacity var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.dotActive::before {
+  width: 18px;
+  opacity: 1;
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    scroll-behavior: auto;
+  }
+  .dot::before {
+    transition: none;
+  }
+}
+
+.amount {
+  margin: 0;
+  font-family: var(--font-numbers, var(--font-display));
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.cents {
+  font-size: 25px;
+  color: var(--ink-4);
+}
+
+/* Negativo (p. ej. te pasaste del presupuesto): la cifra se tiñe de acento. */
+.amountNeg,
+.amountNeg .cents {
+  color: var(--accent-strong);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.sep {
+  width: 3px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--ink-4);
+}
