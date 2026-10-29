@@ -8,6 +8,7 @@ import {
   cycleStartDay,
   currentMonth,
   monthName,
+  NAME_BY_NEXT_MONTH_FROM_DAY,
   setCycleChanges,
   shortDay,
   today,
@@ -247,7 +248,9 @@ export function NominaCard() {
               title="Aplicar desde"
               sub={
                 cycleChanged
-                  ? `${monthName(fromKey)} empezará el día ${desiredStartDay}. El mes anterior se alarga o acorta para que no quede ningún día suelto.`
+                  ? `${monthName(fromKey)} empezará el ${shortDay(
+                      `${desiredStartDay >= NAME_BY_NEXT_MONTH_FROM_DAY ? addMonths(fromKey, -1) : fromKey}-${String(desiredStartDay).padStart(2, '0')}`,
+                    )}. El mes anterior se alarga o acorta para que no quede ningún día suelto.`
                   : `Ya es así desde ${monthName(fromKey).toLowerCase()}.`
               }
             >

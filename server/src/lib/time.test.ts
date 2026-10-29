@@ -30,59 +30,80 @@ test('sin tramos, el ciclo es el mes natural (mismo rango que antes)', () => {
   assert.equal(cycleLengthDays(CALENDAR_CYCLE, 2026, 2), 28);
 });
 
-test('transición desde octubre: septiembre absorbe el tramo 1 sep → 24 oct', () => {
+test('transición desde octubre: septiembre corto, octubre 25 sep → 24 oct, noviembre en curso', () => {
   const sep = cycleRange(desdeOctubre, 2026, 9);
   assert.equal(madridDayKey(sep.start), '2026-09-01');
-  assert.equal(madridDayKey(new Date(sep.end.getTime() - 1)), '2026-10-24');
-  assert.equal(cycleLengthDays(desdeOctubre, 2026, 9), 54);
+  assert.equal(madridDayKey(new Date(sep.end.getTime() - 1)), '2026-09-24');
+  assert.equal(cycleLengthDays(desdeOctubre, 2026, 9), 24);
 
   const oct = cycleRange(desdeOctubre, 2026, 10);
   assert.equal(oct.start.getTime(), sep.end.getTime(), 'ciclos contiguos');
-  assert.equal(madridDayKey(oct.start), '2026-10-25');
-  assert.equal(madridDayKey(new Date(oct.end.getTime() - 1)), '2026-11-24');
-  assert.equal(cycleLengthDays(desdeOctubre, 2026, 10), 31);
+  assert.equal(madridDayKey(oct.start), '2026-09-25');
+  assert.equal(madridDayKey(new Date(oct.end.getTime() - 1)), '2026-10-24');
+  assert.equal(cycleLengthDays(desdeOctubre, 2026, 10), 30);
+
+  const nov = cycleRange(desdeOctubre, 2026, 11);
+  assert.equal(nov.start.getTime(), oct.end.getTime(), 'ciclos contiguos');
+  assert.equal(madridDayKey(nov.start), '2026-10-25');
+  assert.equal(madridDayKey(new Date(nov.end.getTime() - 1)), '2026-11-24');
+  assert.equal(cycleLengthDays(desdeOctubre, 2026, 11), 31);
 
   // Agosto no se toca: mes natural.
   assert.equal(cycleLengthDays(desdeOctubre, 2026, 8), 31);
 });
 
+test('el nombre es el del mes que vives: inicio ≥ 17 → mes siguiente; ≤ 16 → el propio', () => {
+  const dia5: CycleConfig = { changes: [{ from: { year: 2026, month: 10 }, startDay: 5 }] };
+  assert.equal(madridDayKey(cycleRange(dia5, 2026, 10).start), '2026-10-05');
+  assert.deepEqual(cycleOf(dia5, madrid('2026-11-03')), { year: 2026, month: 10 });
+  const dia17: CycleConfig = { changes: [{ from: { year: 2026, month: 10 }, startDay: 17 }] };
+  assert.equal(madridDayKey(cycleRange(dia17, 2026, 10).start), '2026-09-17');
+  const dia16: CycleConfig = { changes: [{ from: { year: 2026, month: 10 }, startDay: 16 }] };
+  assert.equal(madridDayKey(cycleRange(dia16, 2026, 10).start), '2026-10-16');
+});
+
 test('el 25 de octubre (cambio de hora) arranca a medianoche de Madrid', () => {
   // 25 oct 2026 es el último domingo de octubre: a las 03:00 vuelve el horario de
   // invierno. La medianoche aún es CEST (+02:00) → 24 oct 22:00 UTC.
-  assert.equal(cycleRange(desdeOctubre, 2026, 10).start.toISOString(), '2026-10-24T22:00:00.000Z');
+  assert.equal(cycleRange(desdeOctubre, 2026, 11).start.toISOString(), '2026-10-24T22:00:00.000Z');
   // 25 nov ya es CET (+01:00).
-  assert.equal(cycleRange(desdeOctubre, 2026, 10).end.toISOString(), '2026-11-24T23:00:00.000Z');
+  assert.equal(cycleRange(desdeOctubre, 2026, 11).end.toISOString(), '2026-11-24T23:00:00.000Z');
 });
 
 test('cycleOf asigna cada día a su ciclo', () => {
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-29')), { year: 2026, month: 10 });
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-25')), { year: 2026, month: 10 });
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-24')), { year: 2026, month: 9 });
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-10')), { year: 2026, month: 9 });
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-11-03')), { year: 2026, month: 10 });
-  assert.deepEqual(cycleOf(desdeOctubre, madrid('2027-01-05')), { year: 2026, month: 12 });
-  assert.equal(cycleKeyOfDayKey(desdeOctubre, '2026-09-25'), '2026-09');
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-29')), { year: 2026, month: 11 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-25')), { year: 2026, month: 11 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-24')), { year: 2026, month: 10 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-10-10')), { year: 2026, month: 10 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-09-25')), { year: 2026, month: 10 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-09-24')), { year: 2026, month: 9 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-11-03')), { year: 2026, month: 11 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2026-12-26')), { year: 2027, month: 1 });
+  assert.deepEqual(cycleOf(desdeOctubre, madrid('2027-01-05')), { year: 2027, month: 1 });
+  assert.equal(cycleKeyOfDayKey(desdeOctubre, '2026-09-25'), '2026-10');
+  assert.equal(cycleKeyOfDayKey(desdeOctubre, '2026-09-10'), '2026-09');
   assert.equal(cycleKeyOfDayKey(desdeOctubre, '2026-08-27'), '2026-08');
 });
 
 test('cycleDayIndex: día del ciclo, 0 antes y completo después', () => {
-  assert.equal(cycleDayIndex(desdeOctubre, 2026, 10, madrid('2026-10-25')), 1);
-  assert.equal(cycleDayIndex(desdeOctubre, 2026, 10, madrid('2026-10-29')), 5);
-  assert.equal(cycleDayIndex(desdeOctubre, 2026, 10, madrid('2026-11-24')), 31);
-  assert.equal(cycleDayIndex(desdeOctubre, 2026, 10, madrid('2026-12-01')), 31);
-  assert.equal(cycleDayIndex(desdeOctubre, 2026, 11, madrid('2026-10-29')), 0);
+  assert.equal(cycleDayIndex(desdeOctubre, 2026, 11, madrid('2026-10-25')), 1);
+  assert.equal(cycleDayIndex(desdeOctubre, 2026, 11, madrid('2026-10-29')), 5);
+  assert.equal(cycleDayIndex(desdeOctubre, 2026, 11, madrid('2026-11-24')), 31);
+  assert.equal(cycleDayIndex(desdeOctubre, 2026, 11, madrid('2026-12-01')), 31);
+  assert.equal(cycleDayIndex(desdeOctubre, 2026, 12, madrid('2026-10-29')), 0);
 });
 
 test('un segundo cambio no reescribe los ciclos ya vividos', () => {
-  const stored = withCycleChange([{ from: '2026-10', startDay: 25 }], { from: '2027-03', startDay: 20 });
+  const stored = withCycleChange([{ from: '2026-10', startDay: 25 }], { from: '2027-03', startDay: 5 });
   assert.deepEqual(stored, [
     { from: '2026-10', startDay: 25 },
-    { from: '2027-03', startDay: 20 },
+    { from: '2027-03', startDay: 5 },
   ]);
   const cfg = toCycleConfig(stored);
-  assert.equal(madridDayKey(cycleRange(cfg, 2026, 11).start), '2026-11-25');
-  // Febrero cierra el 19 mar (el día antes del nuevo inicio): ciclo corto.
-  assert.equal(madridDayKey(new Date(cycleRange(cfg, 2027, 2).end.getTime() - 1)), '2027-03-19');
+  assert.equal(madridDayKey(cycleRange(cfg, 2026, 12).start), '2026-11-25');
+  // Febrero (25 ene →) se alarga hasta el 4 mar: marzo pasa a empezar el día 5 de marzo.
+  assert.equal(madridDayKey(cycleRange(cfg, 2027, 2).start), '2027-01-25');
+  assert.equal(madridDayKey(new Date(cycleRange(cfg, 2027, 2).end.getTime() - 1)), '2027-03-04');
   // Volver al mismo día vigente no añade un tramo inútil; uno nuevo sustituye lo programado después.
   assert.deepEqual(withCycleChange(stored, { from: '2027-03', startDay: 25 }), [
     { from: '2026-10', startDay: 25 },
@@ -109,14 +130,14 @@ test('patrimonio al cierre: cierre(M) − cierre(M−1) = delta(M), exacto', () 
 });
 
 test('nómina adelantada: hasta 5 días antes del inicio es la del ciclo que empieza', () => {
-  // 25 dic 2026 es festivo: se cobra el 23 → nómina de diciembre, no segunda de noviembre.
-  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-23')), { year: 2026, month: 12 });
-  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-20')), { year: 2026, month: 12 });
-  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-19')), { year: 2026, month: 11 });
-  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-10-25')), { year: 2026, month: 10 });
-  // En mes natural no hay margen: el 25 sep es de septiembre (que empieza el 1).
-  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-09-25')), { year: 2026, month: 9 });
+  // 25 dic 2026 es festivo: se cobra el 23 → nómina de ENERO (25 dic → 24 ene), no segunda de diciembre.
+  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-23')), { year: 2027, month: 1 });
+  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-20')), { year: 2027, month: 1 });
+  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-12-19')), { year: 2026, month: 12 });
+  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-10-25')), { year: 2026, month: 11 });
+  assert.deepEqual(nominaCycleOf(desdeOctubre, madrid('2026-09-25')), { year: 2026, month: 10 });
+  // Septiembre de transición (1 → 24 sep): su ventana acaba el 19 (la de octubre empieza el 20).
   const w = nominaWindow(desdeOctubre, 2026, 9);
   assert.equal(madridDayKey(w.start), '2026-09-01');
-  assert.equal(madridDayKey(new Date(w.end.getTime() - 1)), '2026-10-19');
+  assert.equal(madridDayKey(new Date(w.end.getTime() - 1)), '2026-09-19');
 });

@@ -16,7 +16,7 @@
 // PWA instalada seguiría arrancando con la franja del notch negra.
 // v19: instalación guiada (アプリ en Ajustes + aviso del login).
 // v18: notificaciones push (listeners `push` y `notificationclick` al final).
-const CACHE_VERSION = 'kobo-v21';
+const CACHE_VERSION = 'kobo-v22';
 // Solo lo imprescindible para arrancar offline. Los iconos pesados (apple-touch, PNG del
 // manifest) NO entran: el SO ya los tiene tras instalar y precargarlos costaría ~430 KB a
 // todo el mundo, también a quien nunca los usa. Caen en el cache-first de abajo si hacen falta.

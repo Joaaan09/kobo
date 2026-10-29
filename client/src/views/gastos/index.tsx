@@ -271,8 +271,10 @@ export function GastosView() {
     if (collected) return null;
     if (!incomeConfig || incomeConfig.amountCents <= 0) return null;
     if (month > currentMonth()) return null; // un mes futuro aún no se cobra
+    const date = nominaDate(month, incomeConfig.payDay);
+    if (!date) return null; // mes de transición sin día de cobro dentro
     return {
-      date: nominaDate(month, incomeConfig.payDay),
+      date,
       amountCents: incomeConfig.amountCents,
       accountId: incomeConfig.defaultAccountId,
     };

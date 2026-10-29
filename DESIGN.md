@@ -695,14 +695,17 @@ cuenta, para todos los dispositivos). Lo segundo **solo existe si lo primero est
 El "mes" de Kobo puede ser un **ciclo de nómina**: si cobras el 25, tu mes de verdad va del 25 al 24, y
 así lo mide todo (presupuesto, ritmo, Gastos, Meses, la guardia de una nómina por mes, los fondos).
 
-- **Nombre = mes en que empieza el ciclo:** "Octubre" = 25 oct → 24 nov. La nómina cae el **día 1** del
-  ciclo que financia.
+- **Nombre = el mes que vives** (el mes natural con más días dentro del ciclo): con cobro el 25, lo cobrado
+  el 25 de octubre es **Noviembre** (25 oct → 24 nov). Inicio del 17 al 28 → se nombra por el mes
+  siguiente; del 2 al 16 → por el mes en que empieza. La nómina cae el **día 1** del ciclo que financia.
 - **Cabecera:** bajo el nombre del mes, el **tramo** en sans 10px `--ink-3` (`.monthRange`,
   "25 oct – 24 nov"). Solo si el ciclo no es el mes natural: decir "1 – 31" sería ruido.
 - **Ritmo del mes:** los extremos de la línea de tiempo son los días reales del ciclo ("25 oct · día
   5/31 · 24 nov"), no "1 → 31".
+- **Mes de transición** (el primero tras cambiar el inicio) puede ser corto o largo; Meses añade
+  "· N días" al tramo, y si no contiene ningún día de cobro no muestra "nómina prevista".
 - **Meses:** cada tarjeta lleva el tramo bajo el título (12px `--ink-3`) cuando no es mes natural. El mes
-  de transición se ve tal cual es (p. ej. "1 sept – 24 oct").
+  de transición se ve tal cual es (p. ej. "1 sept – 24 sept · 24 días").
 - **Yo → Nómina → "Inicio del mes"** (`BlockRow`): segmentado `Día 1 · Día N · cobro` (N = día de cobro,
   como mucho 28). Si el valor cambia, aparece un **bloque hijo** "Aplicar desde" (`Este mes · El mes que
   viene`) con la consecuencia escrita: el mes anterior se alarga o acorta para no dejar días sueltos.

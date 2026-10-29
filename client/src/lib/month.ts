@@ -3,10 +3,12 @@
  * **Europe/Madrid** (coherente con el backend, que filtra los gastos por esa zona).
  *
  * **Ciclo de nómina:** el mes de Kobo puede empezar el día de cobro (p. ej. el 25)
- * en vez del día 1. La clave `YYYY-MM` es el mes en que el ciclo EMPIEZA
- * ("Octubre" = 25 oct → 24 nov). Espejo exacto de `server/src/lib/time.ts`: desde
- * el tramo `from`, cada ciclo empieza el día `startDay`; antes, mes natural; y
- * cada ciclo acaba el día antes de que empiece el siguiente (contiguos siempre).
+ * en vez del día 1. La clave `YYYY-MM` es **el mes que vives** con esa nómina: el
+ * mes natural con más días dentro del ciclo ("Noviembre" = 25 oct → 24 nov; con
+ * inicio el 5, "Octubre" = 5 oct → 4 nov). Espejo exacto de `server/src/lib/time.ts`:
+ * desde el tramo `from`, cada ciclo empieza el día `startDay` (del mes anterior si
+ * es ≥ 17); antes, mes natural; y cada ciclo acaba el día antes de que empiece el
+ * siguiente (contiguos siempre).
  */
 
 import type { CycleChange } from './types';
@@ -73,21 +75,40 @@ export function isCalendarCycle(month: string): boolean {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+/** Desplaza un día `YYYY-MM-DD` `n` días (±). */
+function shiftDayKey(dayKey: string, n: number): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+}
+
+/** A partir de este día de inicio, el ciclo se nombra por el mes siguiente (tiene más días en él). */
+export const NAME_BY_NEXT_MONTH_FROM_DAY = 17;
+
+/** Primer día (`YYYY-MM-DD`) del ciclo `month`: puede caer en el mes anterior. */
+function cycleStart(month: string): string {
+  const day = cycleStartDay(month);
+  const base = day >= NAME_BY_NEXT_MONTH_FROM_DAY ? addMonths(month, -1) : month;
+  return `${base}-${pad2(day)}`;
+}
+
 /** Primer y último día (`YYYY-MM-DD`, ambos inclusive) del ciclo `month`. */
 export function cycleBounds(month: string): { firstDay: string; lastDay: string } {
-  const { year, month: m } = splitMonth(month);
-  const next = splitMonth(addMonths(month, 1));
-  const end = new Date(Date.UTC(next.year, next.month - 1, cycleStartDay(addMonths(month, 1)) - 1));
   return {
-    firstDay: `${year}-${pad2(m)}-${pad2(cycleStartDay(month))}`,
-    lastDay: `${end.getUTCFullYear()}-${pad2(end.getUTCMonth() + 1)}-${pad2(end.getUTCDate())}`,
+    firstDay: cycleStart(month),
+    lastDay: shiftDayKey(cycleStart(addMonths(month, 1)), -1),
   };
 }
 
 /** Clave del ciclo al que pertenece un día `YYYY-MM-DD`. */
 export function cycleOfDay(dayKey: string): string {
+  // Candidatos: el ciclo de este mes, el del siguiente (si empieza en este mes)
+  // o el del anterior. Las claves `YYYY-MM-DD` se comparan bien como texto.
   const month = dayKey.slice(0, 7);
-  return Number(dayKey.slice(8, 10)) >= cycleStartDay(month) ? month : addMonths(month, -1);
+  const next = addMonths(month, 1);
+  if (cycleStart(next) <= dayKey) return next;
+  if (cycleStart(month) <= dayKey) return month;
+  return addMonths(month, -1);
 }
 
 /** Mes actual (el ciclo en curso) como `YYYY-MM` (Europe/Madrid). */
@@ -157,6 +178,7 @@ export function monthYear(month: string): string {
  * Fecha `YYYY-MM-DD` en la que se espera la nómina del ciclo `month`: su día de
  * ingreso **dentro del ciclo** (con inicio el 25 y cobro el 25, el día 1 del
  * ciclo), acotado a los días reales del mes (`payDay` 31 en febrero → 28/29).
+ * `null` si el ciclo no contiene ningún día de cobro (mes de transición corto).
  *
  * En el **mes en curso** nunca se proyecta al futuro: si el día de cobro todavía
  * no ha llegado, se propone hoy — el ingreso se registra el día que el dinero
@@ -165,7 +187,7 @@ export function monthYear(month: string): string {
  *
  * `todayKey` es inyectable para poder probar la función; por defecto, hoy (Madrid).
  */
-export function nominaDate(month: string, payDay: number, todayKey: string = today()): string {
+export function nominaDate(month: string, payDay: number, todayKey: string = today()): string | null {
   const onMonth = (key: string) => {
     const { year, month: m } = splitMonth(key);
     const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
@@ -173,11 +195,14 @@ export function nominaDate(month: string, payDay: number, todayKey: string = tod
     return `${key}-${pad2(day)}`;
   };
   const { firstDay, lastDay } = cycleBounds(month);
-  // El día de cobro en el mes de inicio; si cae antes de que empiece el ciclo,
-  // el del mes siguiente (un ciclo de 25 a 24 con cobro el día 3 → el 3 del siguiente).
-  let key = onMonth(month);
-  if (key < firstDay) key = onMonth(addMonths(month, 1));
-  if (key > lastDay) key = lastDay;
+  // El día de cobro en el mes en que empieza el ciclo; si cae antes del inicio, el
+  // del mes siguiente (un ciclo de 25 a 24 con cobro el día 3 → el 3 del siguiente).
+  const startMonth = firstDay.slice(0, 7);
+  let key = onMonth(startMonth);
+  if (key < firstDay) key = onMonth(addMonths(startMonth, 1));
+  // Un mes de transición corto puede no contener ningún día de cobro: no hay
+  // nómina prevista (la de ese dinero vive en el mes vecino).
+  if (key > lastDay) return null;
   return month === cycleOfDay(todayKey) && key > todayKey ? todayKey : key;
 }
 
@@ -191,12 +216,6 @@ export function dayKeyOf(iso: string): string {
   }).format(new Date(iso));
 }
 
-/** Desplaza un día `YYYY-MM-DD` `n` días (±). */
-function shiftDayKey(dayKey: string, n: number): string {
-  const [y, m, d] = dayKey.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d + n));
-  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
-}
 
 /**
  * Margen de **nómina adelantada** (espejo de `NOMINA_EARLY_DAYS` del servidor):

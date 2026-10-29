@@ -8,8 +8,8 @@
  * de marzo/octubre a las 02:00/03:00), así que el offset es exacto en la práctica.
  *
  * **Ciclo de nómina:** el "mes" de Kobo puede empezar el día de cobro en vez del
- * día 1 (ver `CycleConfig`). La clave sigue siendo `YYYY-MM` = el mes en que el
- * ciclo **empieza** ("Octubre" = 25 oct → 24 nov).
+ * día 1 (ver `CycleConfig`). La clave sigue siendo `YYYY-MM` = el mes que vives
+ * con esa nómina ("Noviembre" = 25 oct → 24 nov).
  */
 
 export const TZ = 'Europe/Madrid';
@@ -128,10 +128,17 @@ export function monthIndex(year: number, month: number): number {
  * tramo, mes natural (día 1). Un historial —y no un único valor— para que cambiar
  * el día más adelante no reescriba los ciclos ya vividos.
  *
- * Construcción: `inicio(clave) = día d(clave) 00:00` y `fin(clave) = inicio(clave+1)`.
- * Así los ciclos son **contiguos por construcción** (ni huecos ni solapes), y la
- * transición sale sola: con un tramo `{ from: 2026-10, startDay: 25 }`, septiembre
- * va del 1 sep al 24 oct (absorbe el tramo) y octubre arranca el 25 oct.
+ * **Nombre del mes = el mes que vives:** el ciclo se llama como el mes natural
+ * con más días dentro. Si empieza el día 17 o después, casi todo cae en el mes
+ * siguiente, así que se nombra por él: con cobro el 25, lo cobrado el 25 de
+ * octubre es **Noviembre** (25 oct → 24 nov). Si empieza del 2 al 16, se nombra
+ * por el mes en que empieza (5 oct → 4 nov = Octubre).
+ *
+ * Construcción: `inicio(clave)` = día `d(clave)` del mes de la clave (o del
+ * anterior si `d ≥ 17`) y `fin(clave) = inicio(clave+1)`. Así los ciclos son
+ * **contiguos por construcción** (ni huecos ni solapes), y la transición sale
+ * sola: con un tramo `{ from: 2026-10, startDay: 25 }`, septiembre va del 1 al 24
+ * sep (corto), octubre del 25 sep al 24 oct y noviembre del 25 oct al 24 nov.
  */
 export interface CycleChange {
   from: { year: number; month: number };
@@ -145,6 +152,9 @@ export interface CycleConfig {
 
 /** Mes natural: el comportamiento histórico de Kobo. */
 export const CALENDAR_CYCLE: CycleConfig = { changes: [] };
+
+/** A partir de este día de inicio, el ciclo se nombra por el mes siguiente (tiene más días en él). */
+export const NAME_BY_NEXT_MONTH_FROM_DAY = 17;
 
 /** Clave anterior/siguiente (`month` 1..12) sin pasar por `Date`. */
 export function shiftMonth(year: number, month: number, delta: number): { year: number; month: number } {
@@ -163,16 +173,28 @@ export function cycleStartDayFor(cfg: CycleConfig, year: number, month: number):
   return Math.min(Math.max(Math.trunc(day) || 1, 1), 28);
 }
 
+/** Día de calendario en que empieza el ciclo `year-month` (puede ser del mes anterior). */
+export function cycleStartFor(
+  cfg: CycleConfig,
+  year: number,
+  month: number,
+): { year: number; month: number; day: number } {
+  const day = cycleStartDayFor(cfg, year, month);
+  const base = day >= NAME_BY_NEXT_MONTH_FROM_DAY ? shiftMonth(year, month, -1) : { year, month };
+  return { ...base, day };
+}
+
+/** Orden total de un día de calendario (para comparar sin crear fechas). */
+const dayOrd = (d: { year: number; month: number; day: number }) =>
+  monthIndex(d.year, d.month) * 32 + d.day;
+
 /** Rango [start, end) del ciclo `year-month` en zona Europe/Madrid. */
 export function cycleRange(cfg: CycleConfig, year: number, month: number): MonthRange {
   const next = shiftMonth(year, month, 1);
-  const start = zonedMidnightToUtc(year, month - 1, cycleStartDayFor(cfg, year, month), TZ);
-  const end = zonedMidnightToUtc(
-    next.year,
-    next.month - 1,
-    cycleStartDayFor(cfg, next.year, next.month),
-    TZ,
-  );
+  const a = cycleStartFor(cfg, year, month);
+  const b = cycleStartFor(cfg, next.year, next.month);
+  const start = zonedMidnightToUtc(a.year, a.month - 1, a.day, TZ);
+  const end = zonedMidnightToUtc(b.year, b.month - 1, b.day, TZ);
   return { year, month, start, end };
 }
 
@@ -183,7 +205,13 @@ export function cycleOfDay(
   month: number,
   day: number,
 ): { year: number; month: number } {
-  return day >= cycleStartDayFor(cfg, year, month) ? { year, month } : shiftMonth(year, month, -1);
+  const t = dayOrd({ year, month, day });
+  // Candidatos: el ciclo de este mes, el del siguiente (si empieza en este mes)
+  // o el del anterior. Un ciclo empieza como pronto en el mes previo a su nombre.
+  const next = shiftMonth(year, month, 1);
+  if (dayOrd(cycleStartFor(cfg, next.year, next.month)) <= t) return next;
+  if (dayOrd(cycleStartFor(cfg, year, month)) <= t) return { year, month };
+  return shiftMonth(year, month, -1);
 }
 
 /** Clave del ciclo al que pertenece un instante. */
@@ -199,15 +227,19 @@ export function cycleKeyOfDayKey(cfg: CycleConfig, dayKey: string): string {
   return `${c.year}-${String(c.month).padStart(2, '0')}`;
 }
 
-/** Nº de días del ciclo (28..62 en una transición). */
+/** `Date.UTC` del día de inicio de un ciclo (aritmética de calendario, sin horas). */
+function cycleStartUtc(cfg: CycleConfig, year: number, month: number): number {
+  const s = cycleStartFor(cfg, year, month);
+  return Date.UTC(s.year, s.month - 1, s.day);
+}
+
+/** Nº de días del ciclo (más o menos de un mes en una transición). */
 export function cycleLengthDays(cfg: CycleConfig, year: number, month: number): number {
   const next = shiftMonth(year, month, 1);
-  const startDay = cycleStartDayFor(cfg, year, month);
-  const endDay = cycleStartDayFor(cfg, next.year, next.month);
   // Diferencia en días de calendario (UTC puro: no le afecta el horario de verano).
-  const a = Date.UTC(year, month - 1, startDay);
-  const b = Date.UTC(next.year, next.month - 1, endDay);
-  return Math.round((b - a) / 86_400_000);
+  return Math.round(
+    (cycleStartUtc(cfg, next.year, next.month) - cycleStartUtc(cfg, year, month)) / 86_400_000,
+  );
 }
 
 /**
@@ -217,9 +249,7 @@ export function cycleLengthDays(cfg: CycleConfig, year: number, month: number): 
 export function cycleDayIndex(cfg: CycleConfig, year: number, month: number, instant: Date): number {
   const length = cycleLengthDays(cfg, year, month);
   const { year: y, month: m, day: d } = madridParts(instant);
-  const a = Date.UTC(year, month - 1, cycleStartDayFor(cfg, year, month));
-  const t = Date.UTC(y, m - 1, d);
-  const idx = Math.floor((t - a) / 86_400_000) + 1;
+  const idx = Math.floor((Date.UTC(y, m - 1, d) - cycleStartUtc(cfg, year, month)) / 86_400_000) + 1;
   if (idx < 1) return 0;
   return Math.min(idx, length);
 }
@@ -235,10 +265,10 @@ export const NOMINA_EARLY_DAYS = 5;
 
 /** Inicio de la ventana de nómina del ciclo (su inicio, adelantado si empieza el día de cobro). */
 function nominaWindowStart(cfg: CycleConfig, year: number, month: number): Date {
-  const startDay = cycleStartDayFor(cfg, year, month);
-  const day = startDay > 1 ? startDay - NOMINA_EARLY_DAYS : startDay;
+  const s = cycleStartFor(cfg, year, month);
+  const day = s.day > 1 ? s.day - NOMINA_EARLY_DAYS : s.day;
   // `Date.UTC` resuelve días ≤ 0 hacia el mes anterior.
-  return zonedMidnightToUtc(year, month - 1, day, TZ);
+  return zonedMidnightToUtc(s.year, s.month - 1, day, TZ);
 }
 
 /** Ventana [start, end) en la que una nómina cuenta como la del ciclo `year-month`. */
