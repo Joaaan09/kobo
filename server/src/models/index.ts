@@ -49,6 +49,13 @@ export type { IValuation, ValuationKind, ValuationDocument } from './Valuation.j
 export { MonthSnapshot } from './MonthSnapshot.js';
 export type { IMonthSnapshot, IAllocation, MonthSnapshotDocument } from './MonthSnapshot.js';
 
+export { Subscription } from './Subscription.js';
+export type {
+  ISubscription,
+  SubscriptionDocument,
+  SubscriptionFrequency,
+} from './Subscription.js';
+
 export { Distribution } from './Distribution.js';
 export type {
   IDistribution,

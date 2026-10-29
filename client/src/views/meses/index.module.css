@@ -62,6 +62,20 @@
   gap: var(--space-2);
 }
 
+.monthTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Tramo del ciclo cuando el mes empieza el día de cobro (DESIGN.md §17.10). */
+.monthRange {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
 .monthName {
   font-family: var(--font-display);
   font-size: 19px;
@@ -125,27 +139,51 @@
   color: var(--ink-2);
 }
 
-/* Patrimonio del mes: variación y su descomposición ---------------------- */
+/* Patrimonio del mes: cierre, variación y su descomposición -------------- */
 
 .patrimonio {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-1);
   padding-top: var(--space-3);
   border-top: 1px solid var(--line);
   font-size: 12.5px;
   color: var(--ink-3);
 }
 
+.patRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .patLabel {
   color: var(--ink-3);
 }
 
-.patDelta {
-  font-size: 14.5px;
+.patTotal {
+  font-size: 18px;
   font-weight: 600;
   color: var(--ink);
+}
+
+/* Sin verde (DESIGN.md): sube en acento, baja/igual en tinta apagada. */
+.patChange,
+.patChangeUp {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.patChangeUp {
+  color: var(--accent);
+}
+
+.patDelta {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: inherit;
 }
 
 /* Las dos patas (aportado · rendimiento) son apoyo: no compiten con el total. */

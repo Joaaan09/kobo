@@ -84,7 +84,7 @@ export const ingestTransactionSchema = z
 export type IngestTransactionInput = z.infer<typeof ingestTransactionSchema>;
 
 // accountId y bucketId van juntos o ninguno (mismo invariante que en los gastos).
-const accountBucketPair = (d: { accountId?: string; bucketId?: string }) =>
+const accountBucketPair = (d: { accountId?: string | null; bucketId?: string | null }) =>
   Boolean(d.accountId) === Boolean(d.bucketId);
 
 /** Alta de token de ingesta: una etiqueta y, opcionalmente, la cuenta que paga. */
@@ -95,6 +95,25 @@ export const apiTokenCreateSchema = z
     bucketId: zObjectId.optional(),
   })
   .refine(accountBucketPair, { message: 'account_bucket_pair', path: ['bucketId'] });
+
+/**
+ * Edición de un dispositivo: nombre, tarjeta (cuenta + sub-saldo) y categoría por
+ * defecto. `undefined` = no tocar; `null` = desvincular.
+ */
+export const apiTokenUpdateSchema = z
+  .object({
+    label: z.string().trim().min(1).max(60).optional(),
+    accountId: zObjectId.nullable().optional(),
+    bucketId: zObjectId.nullable().optional(),
+    defaultCategoryId: zObjectId.nullable().optional(),
+    defaultSubcategoryId: zObjectId.nullable().optional(),
+  })
+  .refine(accountBucketPair, { message: 'account_bucket_pair', path: ['bucketId'] })
+  // Una subcategoría por defecto sin su categoría no significa nada.
+  .refine((d) => !d.defaultSubcategoryId || d.defaultCategoryId !== null, {
+    message: 'subcategory_without_category',
+    path: ['defaultSubcategoryId'],
+  });
 
 /** Regla de auto-asignación: "comercio contiene X → categoría Y". */
 export const ingestRuleCreateSchema = z.object({
@@ -110,5 +129,6 @@ export const ingestRuleUpdateSchema = z.object({
 });
 
 export type ApiTokenCreateInput = z.infer<typeof apiTokenCreateSchema>;
+export type ApiTokenUpdateInput = z.infer<typeof apiTokenUpdateSchema>;
 export type IngestRuleCreateInput = z.infer<typeof ingestRuleCreateSchema>;
 export type IngestRuleUpdateInput = z.infer<typeof ingestRuleUpdateSchema>;

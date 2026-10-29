@@ -82,8 +82,6 @@ export function TallerView() {
     );
   }
 
-  const monthAbbr = name.slice(0, 3).toLowerCase();
-
   return (
     <section className={styles.view} aria-label={`Taller — ${name}`}>
       {/* Los dos envoltorios son `display: contents` en móvil (DESIGN.md §19.4):
@@ -93,7 +91,7 @@ export function TallerView() {
           es el del móvil y no se toca: es el que manda cuando no hay rejilla. */}
       <div className={styles.side}>
         <Hero data={data} month={month} />
-        <Ritmo data={data} monthAbbr={monthAbbr} />
+        <Ritmo data={data} />
       </div>
 
       <div className={styles.stack}>

@@ -66,6 +66,13 @@
   padding-top: var(--space-1);
 }
 
+/* Subtotal de lo filtrado ("¿cuánto ha salido de esta cuenta?"). */
+.filteredTotal {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
 /* Grupos por día -------------------------------------------------------- */
 
 .days {

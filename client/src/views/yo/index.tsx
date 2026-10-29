@@ -6,6 +6,7 @@ import { CategoriasCard } from './CategoriasCard';
 import { AparienciaCard } from './AparienciaCard';
 import { AplicacionCard } from './AplicacionCard';
 import { AutomatizacionCard } from './AutomatizacionCard';
+import { SuscripcionesCard } from './SuscripcionesCard';
 import { NotificacionesCard } from './NotificacionesCard';
 import { SeguridadCard } from './SeguridadCard';
 import styles from './index.module.css';
@@ -36,6 +37,7 @@ export function YoView() {
       <NominaCard />
       <ModulosCard />
       <CategoriasCard />
+      <SuscripcionesCard />
       <AparienciaCard />
       <AplicacionCard />
       <AutomatizacionCard />

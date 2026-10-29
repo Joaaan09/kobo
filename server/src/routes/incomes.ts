@@ -3,7 +3,8 @@ import mongoose, { Types } from 'mongoose';
 import { Income } from '../models/Income.js';
 import { incomeCreateSchema, incomeUpdateSchema } from '../schemas/income.js';
 import { adjustBucketBalance, bucketExists } from '../services/accounts.js';
-import { parseMonthParam, madridMonthRange, madridParts } from '../lib/time.js';
+import { parseMonthParam, cycleRange, nominaCycleOf, nominaWindow } from '../lib/time.js';
+import { getCycleConfig } from '../services/cycle.js';
 import { asyncHandler, parseBody, sendOk, sendError, getUserId } from '../lib/http.js';
 
 const router = Router();
@@ -22,7 +23,8 @@ router.get(
         sendError(res, 'invalid_month');
         return;
       }
-      const { start, end } = madridMonthRange(parsed.year, parsed.month);
+      const cycle = await getCycleConfig(userId);
+      const { start, end } = cycleRange(cycle, parsed.year, parsed.month);
       filter.date = { $gte: start, $lt: end };
     }
 
@@ -40,10 +42,13 @@ router.post(
     const userId = getUserId(req);
 
     // El dinero es sagrado: como mucho UNA nómina por mes (evita duplicar el sueldo
-    // si se pulsa "registrar nómina" dos veces o desde dos dispositivos).
+    // si se pulsa "registrar nómina" dos veces o desde dos dispositivos). El "mes"
+    // es el ciclo, y una nómina adelantada unos días (fin de semana, festivo) es la
+    // del ciclo que empieza, no una segunda del que acaba (`nominaWindow`).
     if (body.isNomina) {
-      const { year, month } = madridParts(body.date);
-      const { start, end } = madridMonthRange(year, month);
+      const cycle = await getCycleConfig(userId);
+      const { year, month } = nominaCycleOf(cycle, body.date);
+      const { start, end } = nominaWindow(cycle, year, month);
       const already = await Income.findOne({
         userId,
         isNomina: true,

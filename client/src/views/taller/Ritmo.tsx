@@ -1,13 +1,12 @@
 import { cx } from '../../lib/cx';
 import { formatBp } from '../../lib/money';
+import { shortDay } from '../../lib/month';
 import { Money } from '../../ui';
 import type { DashboardSummary } from '../../lib/types';
 import styles from './Ritmo.module.css';
 
 interface RitmoProps {
   data: DashboardSummary;
-  /** Abreviatura del mes activo ("ago"), para el pie de la línea de tiempo. */
-  monthAbbr: string;
 }
 
 /**
@@ -17,7 +16,7 @@ interface RitmoProps {
  * coinciden porque `ritmoIdealCents ≈ totalAsignado · diaActual/diasMes`.
  * TODO: serie diaria real (barras por día) cuando exista el endpoint.
  */
-export function Ritmo({ data, monthAbbr }: RitmoProps) {
+export function Ritmo({ data }: RitmoProps) {
   const { ritmo } = data;
   // El ritmo se mide contra el presupuesto LIBRE del mes: la nómina menos lo ya
   // apartado (ahorro a mano + reserva de fondos). Espejo de `gastableCents` del
@@ -56,12 +55,14 @@ export function Ritmo({ data, monthAbbr }: RitmoProps) {
         <span className={styles.marker} style={{ left: `${markerPct}%` }} aria-hidden />
       </div>
 
+      {/* Extremos REALES del ciclo: con el mes empezando el día de cobro, la
+          línea va del 25 oct al 24 nov, no del 1 al 31. */}
       <div className={styles.timeline}>
-        <span>1 {monthAbbr}</span>
+        <span>{shortDay(data.cycle.firstDay)}</span>
         <span>
           día {ritmo.diaActual}/{ritmo.diasMes}
         </span>
-        <span>{ritmo.diasMes}</span>
+        <span>{shortDay(data.cycle.lastDay)}</span>
       </div>
     </section>
   );

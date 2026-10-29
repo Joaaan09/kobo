@@ -1,14 +1,16 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { api, ApiError } from '../../lib/api';
 import { useData } from '../../data/RefreshContext';
 import { parseInputToCents } from '../../lib/money';
-import type { Category, Subcategory } from '../../lib/types';
+import { cx } from '../../lib/cx';
+import type { Category, Fund, Subcategory } from '../../lib/types';
 import {
   BottomSheet,
   Button,
   Field,
   IconButton,
   IconClose,
+  Money,
   NumberInput,
   Spinner,
   TextInput,
@@ -20,6 +22,8 @@ interface SubcategoriasSheetProps {
   open: boolean;
   /** Categoría cuyas subcategorías se gestionan; `null` = hoja cerrada. */
   category: Category | null;
+  /** Lo que la categoría recibe de la nómina cada mes (su % en €). */
+  totalCents: number;
   onClose: () => void;
 }
 
@@ -32,8 +36,13 @@ interface Draft {
 /**
  * Hoja para gestionar las subcategorías de una categoría: lista con edición y
  * borrado por fila, más un formulario para añadir. Carga perezosa al abrir.
+ *
+ * Arriba, el **total de la categoría** y lo que **queda por repartir** entre
+ * subcategorías, recalculado con cada tecla (incluido el límite que se está
+ * escribiendo en "Nueva subcategoría"). Lo que reservan los fondos (積立) de la
+ * categoría ya no está disponible para gastar, así que se descuenta antes.
  */
-export function SubcategoriasSheet({ open, category, onClose }: SubcategoriasSheetProps) {
+export function SubcategoriasSheet({ open, category, totalCents, onClose }: SubcategoriasSheetProps) {
   const { refresh } = useData();
   // `undefined` = cargando · array = cargado.
   const [subs, setSubs] = useState<Subcategory[] | undefined>(undefined);
@@ -43,6 +52,7 @@ export function SubcategoriasSheet({ open, category, onClose }: SubcategoriasShe
   const [newName, setNewName] = useState('');
   const [newLimit, setNewLimit] = useState('');
   const [adding, setAdding] = useState(false);
+  const [funds, setFunds] = useState<Fund[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState('');
 
@@ -56,6 +66,15 @@ export function SubcategoriasSheet({ open, category, onClose }: SubcategoriasShe
     setConfirmId(null);
     setNewName('');
     setNewLimit('');
+    setFunds([]);
+    void api
+      .get<Fund[]>(`/funds?categoryId=${category.id}`)
+      .then((list) => {
+        if (alive) setFunds(Array.isArray(list) ? list : []);
+      })
+      .catch(() => {
+        /* sin fondos: el total se muestra entero */
+      });
     api
       .get<Subcategory[]>(`/subcategories?categoryId=${category.id}`)
       .then((list) => {
@@ -81,6 +100,29 @@ export function SubcategoriasSheet({ open, category, onClose }: SubcategoriasShe
       alive = false;
     };
   }, [open, category]);
+
+  // Reserva mensual de los fondos de la categoría (espejo de `fundProvisionCents`).
+  const reservedCents = useMemo(
+    () =>
+      funds.reduce(
+        (sum, f) => sum + (f.everyMonths > 0 ? Math.round(f.targetCents / f.everyMonths) : 0),
+        0,
+      ),
+    [funds],
+  );
+
+  // Σ límites con lo TECLEADO (borradores + el nuevo), no con lo guardado: el
+  // restante tiene que moverse mientras escribes, que es cuando decides.
+  const limitsCents = useMemo(() => {
+    const listed = (subs ?? []).reduce(
+      (sum, s) => sum + parseInputToCents(drafts[s.id]?.limit ?? ''),
+      0,
+    );
+    return listed + parseInputToCents(newLimit);
+  }, [subs, drafts, newLimit]);
+
+  const availableCents = totalCents - reservedCents;
+  const remainingCents = availableCents - limitsCents;
 
   if (!category) return null;
 
@@ -178,6 +220,36 @@ export function SubcategoriasSheet({ open, category, onClose }: SubcategoriasShe
   return (
     <BottomSheet open={open} onClose={onClose} title={`Subcategorías · ${category.name}`}>
       <div className={styles.sheetForm}>
+        <div className={styles.subBudget} aria-live="polite">
+          <div className={styles.subBudgetRow}>
+            <span>Total de la categoría</span>
+            <Money cents={totalCents} className={styles.subBudgetNum} />
+          </div>
+          {reservedCents > 0 ? (
+            <div className={styles.subBudgetRow}>
+              <span>Reservado a fondos</span>
+              <Money cents={-reservedCents} className={styles.subBudgetNum} />
+            </div>
+          ) : null}
+          <div className={styles.subBudgetRow}>
+            <span>Asignado a subcategorías</span>
+            <Money cents={-limitsCents} className={styles.subBudgetNum} />
+          </div>
+          <div className={cx(styles.subBudgetRow, styles.subBudgetTotal)}>
+            <span>{remainingCents < 0 ? 'Te pasas en' : 'Queda por repartir'}</span>
+            <Money
+              cents={Math.abs(remainingCents)}
+              className={cx(styles.subBudgetRemaining, remainingCents < 0 && styles.subBudgetOver)}
+            />
+          </div>
+          {remainingCents < 0 ? (
+            <p className={styles.subBudgetHint}>
+              Los límites suman más de lo que recibe la categoría. Puedes guardarlos igual, pero
+              no habrá dinero para todos.
+            </p>
+          ) : null}
+        </div>
+
         {subs === undefined ? (
           <div className={styles.cardLoading}>
             <Spinner label="Cargando…" />

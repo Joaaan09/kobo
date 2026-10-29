@@ -18,6 +18,7 @@ import incomeConfigRouter from './incomeConfig.js';
 import dashboardRouter from './dashboard.js';
 import distributionsRouter from './distributions.js';
 import monthsRouter from './months.js';
+import subscriptionsRouter from './subscriptions.js';
 
 const router = Router();
 
@@ -58,6 +59,7 @@ router.use('/income-config', requireAuth, incomeConfigRouter);
 router.use('/dashboard', requireAuth, dashboardRouter);
 router.use('/distributions', requireAuth, distributionsRouter);
 router.use('/months', requireAuth, monthsRouter);
+router.use('/subscriptions', requireAuth, subscriptionsRouter);
 router.use('/automation', requireAuth, automationRouter);
 router.use('/push', requireAuth, pushRouter);
 

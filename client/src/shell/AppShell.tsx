@@ -53,7 +53,7 @@ export function AppShell() {
 }
 
 function ShellChrome() {
-  const { month, name, next, prev, dir } = useMonth();
+  const { month, name, range, next, prev, dir } = useMonth();
   const { open } = useAddTransaction();
   const { navKanji } = useTheme();
   const navRef = useRef<HTMLElement>(null);
@@ -79,6 +79,9 @@ function ShellChrome() {
           <span className={styles.monthName} aria-live="polite">
             <span key={month} className={styles.monthNameInner} data-dir={dir}>
               {name}
+              {/* Con el mes empezando el día de cobro, el nombre solo no basta:
+                  "Octubre" va del 25 oct al 24 nov. */}
+              {range ? <span className={styles.monthRange}>{range}</span> : null}
             </span>
           </span>
           <IconButton label="Mes siguiente" variant="ghost" onClick={next}>

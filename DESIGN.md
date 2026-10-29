@@ -690,6 +690,62 @@ cuenta, para todos los dispositivos). Lo segundo **solo existe si lo primero est
   la API, no por un gesto del usuario (§13 / `ui/motion.module.css`); animarlo haría parpadear la
   pantalla sola al cargar.
 
+### 17.10 Mes de nómina — el mes empieza el día de cobro (Shell + Taller + Meses + Yo, 2026-10-29)
+
+El "mes" de Kobo puede ser un **ciclo de nómina**: si cobras el 25, tu mes de verdad va del 25 al 24, y
+así lo mide todo (presupuesto, ritmo, Gastos, Meses, la guardia de una nómina por mes, los fondos).
+
+- **Nombre = mes en que empieza el ciclo:** "Octubre" = 25 oct → 24 nov. La nómina cae el **día 1** del
+  ciclo que financia.
+- **Cabecera:** bajo el nombre del mes, el **tramo** en sans 10px `--ink-3` (`.monthRange`,
+  "25 oct – 24 nov"). Solo si el ciclo no es el mes natural: decir "1 – 31" sería ruido.
+- **Ritmo del mes:** los extremos de la línea de tiempo son los días reales del ciclo ("25 oct · día
+  5/31 · 24 nov"), no "1 → 31".
+- **Meses:** cada tarjeta lleva el tramo bajo el título (12px `--ink-3`) cuando no es mes natural. El mes
+  de transición se ve tal cual es (p. ej. "1 sept – 24 oct").
+- **Yo → Nómina → "Inicio del mes"** (`BlockRow`): segmentado `Día 1 · Día N · cobro` (N = día de cobro,
+  como mucho 28). Si el valor cambia, aparece un **bloque hijo** "Aplicar desde" (`Este mes · El mes que
+  viene`) con la consecuencia escrita: el mes anterior se alarga o acorta para no dejar días sueltos.
+- **Regla de dominio:** los cambios se guardan como **tramos** (`desde mes → día`); un cambio nuevo nunca
+  reescribe los ciclos ya vividos. Ver `decisiones.md`.
+
+### 17.11 Suscripciones — 定期 (Yo, 2026-10-29)
+
+Pagos que se repiten y que Kobo **apunta solo**, como gasto real, el día del cargo.
+
+- **Tarjeta en Yo** (tras Categorías): fila de resumen **"Comprometido al mes"** (Mincho 17px; las
+  anuales suman su doceava parte), una fila por suscripción (punto del color de su categoría + nombre;
+  sub "importe · cada mes, el 15 · próximo 15 nov" o "en pausa") con **Editar**, y pie con nota +
+  **Añadir** (`quiet`). Vacía: `.noteRow` explicando qué hace.
+- **Hoja** (`SuscripcionSheet`): Nombre + Importe en una fila · `Cada mes · Cada año` · (anual) chips de
+  mes `ene…dic` · Día de cobro + **Próximo cargo** (`date`, mínimo hoy; en el alta se propone solo hasta
+  que lo tocas) · chips de categoría → subcategoría · chips de cuenta → sub-saldo · (edición) interruptor
+  **Activa** + "Borrar suscripción" con confirmación ("los cargos ya apuntados se quedan").
+- **Nada retroactivo:** el próximo cargo nunca es pasado (duplicaría lo apuntado a mano). Reprogramar o
+  reanudar no cobra dos veces el mismo periodo.
+- En Gastos el cargo se ve como un gasto más, con el nombre de la suscripción como nota.
+
+### 17.12 Pulidos del 2026-10-29 (Gastos, Yo, Meses, Cuentas)
+
+- **Gastos — filtro por cuenta:** tercera tira de chips (punto del color de la cuenta + "Sin cuenta" si
+  hay movimientos que no tocan saldo); solo si hay ≥ 2 opciones. Aplica a gastos **e** ingresos. Con
+  cualquier filtro activo, línea **"Filtrado: gastado X · ingresos Y"** (13px `--ink-2`) bajo los chips.
+- **Subcategorías — presupuesto de la categoría:** caja `.subBudget` (fondo `--surface-2`, borde 1px,
+  `--r-md`) arriba de la hoja: *Total de la categoría* · *Reservado a fondos* (si hay) · *Asignado a
+  subcategorías* · **Queda por repartir** (Mincho 20px). Se recalcula **con cada tecla**, incluido el
+  límite que estás escribiendo. Si los límites superan el total: "Te pasas en" + cifra en `--accent`
+  y una línea de aviso (se puede guardar igual).
+- **Meses — patrimonio:** bloque fijo con **"Patrimonio al cierre"** (hoy: "Patrimonio hoy") en Mincho
+  18px a la derecha, y la variación "↑ +X € respecto al mes anterior" (acento si sube, `--ink-3` si
+  baja) con su desglose aportado · rendimiento. La comparativa de **gasto** va junto al gasto y dice
+  "Gastaste X € más/menos…", para no confundirse con la de patrimonio.
+- **Automatización:** una fila por dispositivo activo ("Cuenta · por defecto Categoría" + **Editar** →
+  hoja con nombre, cuenta/sub-saldo y categoría/subcategoría por defecto). La nota explicativa va en
+  `.noteRow` (antes `.note` suelta: el texto se pegaba a los bordes).
+- **Botones (reset global):** `button { border: 0; background: none }`. El navegador de escritorio
+  pintaba su borde y su gris nativos en botones sin esos estilos (barras oscuras en las tarjetas de
+  Cuentas, círculo gris en las flechas del mes). Quien quiera borde o fondo lo declara en su módulo.
+
 ## 18. Marca — 達磨 Daruma hucha (2026-08-06)
 
 > Fuente de verdad: `KOBO Logo (offline).html` (manual de marca), que muestra los PNG de [brand/](brand/)

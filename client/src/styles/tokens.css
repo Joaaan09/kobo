@@ -146,7 +146,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-button { font: inherit; color: inherit; cursor: pointer; }
+/* `border: 0` + `background: none`: sin ellos, el navegador de escritorio pinta
+ * su borde nativo (2px outset) y su gris de sistema (`buttonface`) en todo botón
+ * cuya clase no los declare — las tarjetas de Cuentas se veían con dos barras
+ * oscuras a los lados en PC y las flechas del mes con un círculo gris (iOS no
+ * los pinta). Quien quiera borde o fondo lo declara en su módulo, que gana por
+ * especificidad. */
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
 
 :focus-visible {
   outline: 2px solid var(--accent);

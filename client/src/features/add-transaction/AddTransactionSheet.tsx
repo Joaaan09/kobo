@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, ApiError } from '../../lib/api';
 import { parseInputToCents } from '../../lib/money';
-import { currentMonth, monthName, today } from '../../lib/month';
+import { addMonths, dayKeyOf, monthName, nominaCycleOfDay, nominaWindow, today } from '../../lib/month';
 import type {
   Account,
   Category,
@@ -167,7 +167,14 @@ export function AddTransactionSheet({ open, initialKind, onClose }: AddTransacti
         api.get<Fund[]>('/funds').catch(() => [] as Fund[]),
         api.get<Account[]>('/accounts').catch(() => [] as Account[]),
         api.get<IncomeConfig | null>('/income-config').catch(() => null),
-        api.get<Income[]>(`/incomes?month=${currentMonth()}`).catch(() => [] as Income[]),
+        // La nómina de hoy puede venir adelantada (fin de semana, festivo): su ventana
+        // empieza unos días antes del ciclo, así que se mira también el ciclo anterior.
+        Promise.all([
+          api.get<Income[]>(`/incomes?month=${nominaCycleOfDay(today())}`).catch(() => [] as Income[]),
+          api
+            .get<Income[]>(`/incomes?month=${addMonths(nominaCycleOfDay(today()), -1)}`)
+            .catch(() => [] as Income[]),
+        ]).then((lists) => lists.flat()),
       ]);
       if (!alive) return;
       setCategories(Array.isArray(cats) ? cats : []);
@@ -175,7 +182,14 @@ export function AddTransactionSheet({ open, initialKind, onClose }: AddTransacti
       setFunds(Array.isArray(fnds) ? fnds : []);
       setAccounts(Array.isArray(accs) ? accs : []);
       setIncomeConfig(cfg ?? null);
-      setNominaThisMonth(Array.isArray(monthIncomes) && monthIncomes.some((i) => i.isNomina));
+      const win = nominaWindow(nominaCycleOfDay(today()));
+      setNominaThisMonth(
+        monthIncomes.some((i) => {
+          if (!i.isNomina) return false;
+          const key = dayKeyOf(i.date);
+          return key >= win.firstDay && key <= win.lastDay;
+        }),
+      );
     })();
     return () => {
       alive = false;
@@ -196,8 +210,9 @@ export function AddTransactionSheet({ open, initialKind, onClose }: AddTransacti
   // De un sobre de ahorro no se gasta: para eso, tráete el dinero con un movimiento
   // y gasta contra una categoría normal.
   const spendableCategories = categories.filter((c) => !c.savings);
-  // Nómina del mes: registrable si hay config con importe y aún no se registró este mes.
-  const nominaMonthLabel = monthName(currentMonth());
+  // Nómina del mes: registrable si hay config con importe y aún no se registró. El
+  // mes es el de la nómina de hoy: unos días antes del cobro ya es la del que empieza.
+  const nominaMonthLabel = monthName(nominaCycleOfDay(today()));
   const canRegisterNomina =
     kind === 'ingreso' && !!incomeConfig && incomeConfig.amountCents > 0 && !nominaThisMonth;
 

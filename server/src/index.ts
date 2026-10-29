@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { connectDB } from './config/db.js';
 import { env } from './config/env.js';
 import { startDailyReminders } from './services/reminders.js';
+import { startSubscriptionScheduler } from './services/subscriptions.js';
 
 async function main() {
   await connectDB();
@@ -11,6 +12,8 @@ async function main() {
   });
   // Recordatorio de fin de día. No-op si no hay claves VAPID configuradas.
   startDailyReminders();
+  // Cargos de suscripciones (定期): se apuntan solos el día que tocan.
+  startSubscriptionScheduler();
 }
 
 main().catch((err) => {

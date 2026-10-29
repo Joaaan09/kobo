@@ -71,8 +71,23 @@
  * la "g" de "Agosto"), así que el recorrido tiene que caber en el hueco propio.
  * `data-dir="0"` (primer render) no anima: la cabecera no parpadea al arrancar. */
 .monthNameInner {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
   animation: mesEntrar var(--dur-2) var(--ease-out) both;
+}
+
+/* Tramo del ciclo bajo el nombre ("25 oct – 24 nov"), solo si no es mes natural
+ * (DESIGN.md §17.10). Sans y pequeño: es contexto, no titular. */
+.monthRange {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .monthNameInner[data-dir='1'] {

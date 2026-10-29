@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 import { IncomeConfig } from '../models/IncomeConfig.js';
 import { incomeConfigSchema } from '../schemas/incomeConfig.js';
 import { bucketExists } from '../services/accounts.js';
+import { withCycleChange } from '../services/cycle.js';
+import { madridParts } from '../lib/time.js';
 import { asyncHandler, parseBody, sendOk, sendError, getUserId } from '../lib/http.js';
 
 const router = Router();
@@ -52,6 +54,20 @@ router.put(
         $unset.defaultAccountId = '';
         $unset.defaultBucketId = '';
       }
+    }
+
+    // Inicio del mes: se añade como tramo al historial (el pasado no se reescribe).
+    if (body.cycle) {
+      // Como mucho desde el mes natural de hoy: un `from` pasado reescribiría
+      // meses ya vividos (sus rangos, su nómina, su ritmo).
+      const { year, month } = madridParts(new Date());
+      const thisMonth = `${year}-${String(month).padStart(2, '0')}`;
+      if (body.cycle.from < thisMonth) {
+        sendError(res, 'cycle_from_in_past', 400);
+        return;
+      }
+      const current = await IncomeConfig.findOne({ userId }, { cycleChanges: 1 }).lean();
+      $set.cycleChanges = withCycleChange(current?.cycleChanges, body.cycle);
     }
 
     const update: Record<string, unknown> = { $set };

@@ -6,7 +6,8 @@ import { Subcategory } from '../models/Subcategory.js';
 import { Fund } from '../models/Fund.js';
 import { expenseCreateSchema, expenseUpdateSchema } from '../schemas/expense.js';
 import { adjustBucketBalance, bucketExists } from '../services/accounts.js';
-import { parseMonthParam, madridMonthRange } from '../lib/time.js';
+import { parseMonthParam, cycleRange } from '../lib/time.js';
+import { getCycleConfig } from '../services/cycle.js';
 import { asyncHandler, parseBody, sendOk, sendError, getUserId } from '../lib/http.js';
 
 const router = Router();
@@ -49,7 +50,9 @@ router.get(
         sendError(res, 'invalid_month');
         return;
       }
-      const { start, end } = madridMonthRange(parsed.year, parsed.month);
+      // El "mes" es el ciclo del usuario (puede empezar el día de cobro).
+      const cycle = await getCycleConfig(userId);
+      const { start, end } = cycleRange(cycle, parsed.year, parsed.month);
       filter.date = { $gte: start, $lt: end };
     }
     if (typeof categoryId === 'string') {

@@ -6,7 +6,8 @@ import { Subcategory } from '../models/Subcategory.js';
 import { Expense } from '../models/Expense.js';
 import { fundCreateSchema, fundUpdateSchema } from '../schemas/fund.js';
 import { fundUpdateDoc } from '../services/funds.js';
-import { madridParts } from '../lib/time.js';
+import { cycleOf } from '../lib/time.js';
+import { getCycleConfig } from '../services/cycle.js';
 import { asyncHandler, parseBody, sendOk, sendError, getUserId } from '../lib/http.js';
 
 const router = Router();
@@ -58,8 +59,8 @@ router.post(
       }
     }
 
-    // Por defecto el fondo empieza a acumular este mes (zona Europe/Madrid).
-    const now = madridParts(new Date());
+    // Por defecto el fondo empieza a acumular en el ciclo en curso.
+    const now = cycleOf(await getCycleConfig(userId), new Date());
     const item = await Fund.create({
       ...body,
       startYear: body.startYear ?? now.year,

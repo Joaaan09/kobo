@@ -1,18 +1,114 @@
 /**
  * Utilidades de mes en formato `YYYY-MM`. El "mes actual" se calcula en zona
  * **Europe/Madrid** (coherente con el backend, que filtra los gastos por esa zona).
+ *
+ * **Ciclo de nómina:** el mes de Kobo puede empezar el día de cobro (p. ej. el 25)
+ * en vez del día 1. La clave `YYYY-MM` es el mes en que el ciclo EMPIEZA
+ * ("Octubre" = 25 oct → 24 nov). Espejo exacto de `server/src/lib/time.ts`: desde
+ * el tramo `from`, cada ciclo empieza el día `startDay`; antes, mes natural; y
+ * cada ciclo acaba el día antes de que empiece el siguiente (contiguos siempre).
  */
 
-/** Mes actual como `YYYY-MM` (Europe/Madrid). */
+import type { CycleChange } from './types';
+
+const CYCLE_CACHE_KEY = 'kobo.cycle';
+
+/** Lee los tramos cacheados para que el primer render ya caiga en el mes correcto. */
+function readCachedCycle(): CycleChange[] {
+  try {
+    const raw = localStorage.getItem(CYCLE_CACHE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as CycleChange[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+let cycleChanges: CycleChange[] = readCachedCycle();
+const cycleListeners = new Set<() => void>();
+
+/** Fija el historial de inicio de mes (viene de `/income-config`) y avisa a quien escuche. */
+export function setCycleChanges(changes: CycleChange[] | undefined): void {
+  const next = [...(changes ?? [])].sort((a, b) => a.from.localeCompare(b.from));
+  if (JSON.stringify(next) === JSON.stringify(cycleChanges)) return;
+  cycleChanges = next;
+  try {
+    localStorage.setItem(CYCLE_CACHE_KEY, JSON.stringify(next));
+  } catch {
+    /* sin almacenamiento: se recalcula al cargar la config */
+  }
+  cycleListeners.forEach((fn) => fn());
+}
+
+/** Olvida el ciclo cacheado (al cerrar sesión: el siguiente usuario puede ser otro). */
+export function clearCycleCache(): void {
+  try {
+    localStorage.removeItem(CYCLE_CACHE_KEY);
+  } catch {
+    /* sin almacenamiento: nada que borrar */
+  }
+  cycleChanges = [];
+}
+
+/** Suscripción a cambios del ciclo. Devuelve la función para darse de baja. */
+export function subscribeCycle(fn: () => void): () => void {
+  cycleListeners.add(fn);
+  return () => cycleListeners.delete(fn);
+}
+
+/** Día (1..28) en que empieza el ciclo `month` (1 = mes natural). */
+export function cycleStartDay(month: string): number {
+  let day = 1;
+  for (const change of cycleChanges) {
+    if (change.from > month) break;
+    day = change.startDay;
+  }
+  return Math.min(Math.max(Math.trunc(day) || 1, 1), 28);
+}
+
+/** ¿Este mes sigue siendo el mes natural (empieza el día 1 y acaba a fin de mes)? */
+export function isCalendarCycle(month: string): boolean {
+  return cycleStartDay(month) === 1 && cycleStartDay(addMonths(month, 1)) === 1;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Primer y último día (`YYYY-MM-DD`, ambos inclusive) del ciclo `month`. */
+export function cycleBounds(month: string): { firstDay: string; lastDay: string } {
+  const { year, month: m } = splitMonth(month);
+  const next = splitMonth(addMonths(month, 1));
+  const end = new Date(Date.UTC(next.year, next.month - 1, cycleStartDay(addMonths(month, 1)) - 1));
+  return {
+    firstDay: `${year}-${pad2(m)}-${pad2(cycleStartDay(month))}`,
+    lastDay: `${end.getUTCFullYear()}-${pad2(end.getUTCMonth() + 1)}-${pad2(end.getUTCDate())}`,
+  };
+}
+
+/** Clave del ciclo al que pertenece un día `YYYY-MM-DD`. */
+export function cycleOfDay(dayKey: string): string {
+  const month = dayKey.slice(0, 7);
+  return Number(dayKey.slice(8, 10)) >= cycleStartDay(month) ? month : addMonths(month, -1);
+}
+
+/** Mes actual (el ciclo en curso) como `YYYY-MM` (Europe/Madrid). */
 export function currentMonth(): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-  }).formatToParts(new Date());
-  const year = parts.find((p) => p.type === 'year')?.value ?? '1970';
-  const month = parts.find((p) => p.type === 'month')?.value ?? '01';
-  return `${year}-${month}`;
+  return cycleOfDay(today());
+}
+
+/** "25 oct – 24 nov" (vacío si el ciclo es el mes natural: no hace falta decirlo). */
+export function cycleRangeLabel(month: string): string {
+  if (isCalendarCycle(month)) return '';
+  const { firstDay, lastDay } = cycleBounds(month);
+  return `${shortDay(firstDay)} – ${shortDay(lastDay)}`;
+}
+
+/** "25 oct" a partir de `YYYY-MM-DD`. */
+export function shortDay(dayKey: string): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const label = new Intl.DateTimeFormat('es-ES', { timeZone: 'UTC', month: 'short' })
+    .format(new Date(Date.UTC(y, m - 1, d)))
+    .replace('.', '');
+  return `${d} ${label}`;
 }
 
 /** Fecha de hoy como `YYYY-MM-DD` (Europe/Madrid), útil para inputs `type="date"`. */
@@ -58,8 +154,9 @@ export function monthYear(month: string): string {
 }
 
 /**
- * Fecha `YYYY-MM-DD` en la que se espera la nómina de `month`: su día de ingreso,
- * acotado a los días reales del mes (`payDay` 31 en febrero → día 28/29).
+ * Fecha `YYYY-MM-DD` en la que se espera la nómina del ciclo `month`: su día de
+ * ingreso **dentro del ciclo** (con inicio el 25 y cobro el 25, el día 1 del
+ * ciclo), acotado a los días reales del mes (`payDay` 31 en febrero → 28/29).
  *
  * En el **mes en curso** nunca se proyecta al futuro: si el día de cobro todavía
  * no ha llegado, se propone hoy — el ingreso se registra el día que el dinero
@@ -69,9 +166,62 @@ export function monthYear(month: string): string {
  * `todayKey` es inyectable para poder probar la función; por defecto, hoy (Madrid).
  */
 export function nominaDate(month: string, payDay: number, todayKey: string = today()): string {
-  const { year, month: m } = splitMonth(month);
-  const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
-  const day = Math.min(Math.max(Math.trunc(payDay) || 1, 1), lastDay);
-  const key = `${month}-${String(day).padStart(2, '0')}`;
-  return month === todayKey.slice(0, 7) && key > todayKey ? todayKey : key;
+  const onMonth = (key: string) => {
+    const { year, month: m } = splitMonth(key);
+    const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
+    const day = Math.min(Math.max(Math.trunc(payDay) || 1, 1), lastDay);
+    return `${key}-${pad2(day)}`;
+  };
+  const { firstDay, lastDay } = cycleBounds(month);
+  // El día de cobro en el mes de inicio; si cae antes de que empiece el ciclo,
+  // el del mes siguiente (un ciclo de 25 a 24 con cobro el día 3 → el 3 del siguiente).
+  let key = onMonth(month);
+  if (key < firstDay) key = onMonth(addMonths(month, 1));
+  if (key > lastDay) key = lastDay;
+  return month === cycleOfDay(todayKey) && key > todayKey ? todayKey : key;
+}
+
+/** Clave de día `YYYY-MM-DD` (Madrid) de un instante ISO. */
+export function dayKeyOf(iso: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(iso));
+}
+
+/** Desplaza un día `YYYY-MM-DD` `n` días (±). */
+function shiftDayKey(dayKey: string, n: number): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+}
+
+/**
+ * Margen de **nómina adelantada** (espejo de `NOMINA_EARLY_DAYS` del servidor):
+ * si el día de cobro cae en fin de semana o festivo, una nómina fechada hasta 5
+ * días antes del inicio del ciclo es la de ese ciclo. Solo si el mes empieza el
+ * día de cobro.
+ */
+const NOMINA_EARLY_DAYS = 5;
+
+function nominaWindowFirstDay(month: string): string {
+  const first = cycleBounds(month).firstDay;
+  return cycleStartDay(month) > 1 ? shiftDayKey(first, -NOMINA_EARLY_DAYS) : first;
+}
+
+/** Días (inclusive) en los que una nómina cuenta como la del ciclo `month`. */
+export function nominaWindow(month: string): { firstDay: string; lastDay: string } {
+  return {
+    firstDay: nominaWindowFirstDay(month),
+    lastDay: shiftDayKey(nominaWindowFirstDay(addMonths(month, 1)), -1),
+  };
+}
+
+/** Ciclo al que pertenece una nómina fechada el día `dayKey` (con el margen). */
+export function nominaCycleOfDay(dayKey: string): string {
+  const month = cycleOfDay(dayKey);
+  const next = addMonths(month, 1);
+  return dayKey >= nominaWindowFirstDay(next) ? next : month;
 }

@@ -350,6 +350,8 @@ export function CategoriasCard() {
       <SubcategoriasSheet
         open={subsCategory !== null}
         category={subsCategory}
+        // El total con el reparto que se ve en pantalla (aunque aún no esté guardado).
+        totalCents={subsCategory ? bpToCents(draftBp(subsCategory.id), nominaCents) : 0}
         onClose={() => setSubsCategory(null)}
       />
       <FondosSheet

@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { Fund } from '../models/Fund.js';
 import { Expense } from '../models/Expense.js';
-import { madridMonthRange, monthIndex } from '../lib/time.js';
+import { CALENDAR_CYCLE, cycleRange, monthIndex, type CycleConfig } from '../lib/time.js';
 
 /**
  * Cálculo de fondos de previsión (積立) para un mes dado. Todo en **céntimos**.
@@ -71,14 +71,16 @@ export interface FundsForMonth {
   reservedTotalCents: number;
 }
 
-/** Calcula todos los fondos del usuario para el mes (zona Europe/Madrid). */
+/** Calcula todos los fondos del usuario para el mes (ciclo, zona Europe/Madrid). */
 export async function computeFundsForMonth(
   userId: string,
   year: number,
   month: number,
+  cycle: CycleConfig = CALENDAR_CYCLE,
 ): Promise<FundsForMonth> {
   const uid = new Types.ObjectId(userId);
-  const { start, end } = madridMonthRange(year, month);
+  // El "mes" del fondo es el ciclo del usuario: la provisión se reserva por ciclo.
+  const { start, end } = cycleRange(cycle, year, month);
 
   const [funds, paidToDateAgg, paidThisMonthAgg] = await Promise.all([
     Fund.find({ userId }).sort({ order: 1, createdAt: 1 }).lean(),

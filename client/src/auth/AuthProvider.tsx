@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
+import { clearCycleCache } from '../lib/month';
 import type { User } from '../lib/types';
 import { Spinner } from '../ui';
 
@@ -56,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.post('/auth/logout');
     } finally {
+      // El inicio de mes es de ESTE usuario: el siguiente que entre puede ser otro.
+      clearCycleCache();
       setUser(null);
     }
   }

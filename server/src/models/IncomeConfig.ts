@@ -18,9 +18,28 @@ export interface IIncomeConfig {
   /** Cuenta + sub-saldo donde cae la nómina (opcional). Prefija el ingreso al cobrarla. */
   defaultAccountId?: Types.ObjectId;
   defaultBucketId?: Types.ObjectId;
+  /**
+   * Inicio del mes de Kobo (ciclo de nómina) como historial de tramos: desde
+   * `from` (`YYYY-MM`, inclusive) cada mes empieza el día `startDay`. Sin tramos,
+   * mes natural. Ver `CycleConfig` en `lib/time.ts`.
+   */
+  cycleChanges: ICycleChange[];
+}
+
+export interface ICycleChange {
+  from: string;
+  startDay: number;
 }
 
 export type IncomeConfigDocument = HydratedDocument<IIncomeConfig>;
+
+const cycleChangeSchema = new Schema<ICycleChange>(
+  {
+    from: { type: String, required: true, match: /^\d{4}-(0[1-9]|1[0-2])$/ },
+    startDay: { type: Number, required: true, min: 1, max: 28 },
+  },
+  { _id: false },
+);
 
 const incomeConfigSchema = new Schema<IIncomeConfig>(
   {
@@ -31,6 +50,7 @@ const incomeConfigSchema = new Schema<IIncomeConfig>(
     effectiveFrom: { type: Date, required: true, default: () => new Date() },
     defaultAccountId: { type: Schema.Types.ObjectId, ref: 'Account' },
     defaultBucketId: { type: Schema.Types.ObjectId },
+    cycleChanges: { type: [cycleChangeSchema], default: [] },
   },
   { timestamps: true },
 );

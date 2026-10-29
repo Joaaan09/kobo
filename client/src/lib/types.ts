@@ -26,6 +26,16 @@ export interface IncomeConfig {
   /** Cuenta + sub-saldo donde cae la nómina (opcional). */
   defaultAccountId?: string;
   defaultBucketId?: string;
+  /**
+   * Inicio del mes de Kobo como historial de tramos: desde `from` (`YYYY-MM`)
+   * cada mes empieza el día `startDay`. Vacío = mes natural.
+   */
+  cycleChanges?: CycleChange[];
+}
+
+export interface CycleChange {
+  from: string;
+  startDay: number;
 }
 
 export interface Subcategory {
@@ -95,8 +105,9 @@ export interface Expense {
   /** Si es `false`, el gasto NO mueve el patrimonio (registro histórico/informativo). */
   affectsPatrimony?: boolean;
   note?: string;
-  /** `ingest` = lo creó la automatización del móvil, no la app. */
-  source?: 'manual' | 'ingest';
+  /** `ingest` = automatización del móvil; `subscription` = cargo de una suscripción. */
+  source?: 'manual' | 'ingest' | 'subscription';
+  subscriptionId?: string;
   /** Comercio que informó Wallet (solo en gastos ingeridos). */
   merchant?: string;
   /** Entró por automatización sin regla que lo clasificara: falta confirmar categoría. */
@@ -114,6 +125,9 @@ export interface ApiToken {
   /** Cuenta + sub-saldo de la tarjeta detrás del token (descuenta patrimonio). */
   accountId?: string;
   bucketId?: string;
+  /** Dónde cae un pago que ninguna regla reconoce (sigue entrando a revisar). */
+  defaultCategoryId?: string;
+  defaultSubcategoryId?: string;
   lastUsedAt?: string;
   /** Último pago rechazado y por qué: la ingesta ya no falla en silencio. */
   lastFailureAt?: string;
@@ -272,13 +286,22 @@ export interface DashboardCategory {
 }
 
 export interface DashboardRitmo {
+  /** Día del ciclo (1-based); `diasMes` si el mes ya cerró, 0 si es futuro. */
   diaActual: number;
+  /** Días del ciclo (con inicio el 25: de 25 a 24). */
   diasMes: number;
   gastadoCents: number;
   ritmoIdealCents: number;
 }
 
+/** Límites del ciclo (días `YYYY-MM-DD` de Madrid, ambos inclusive). */
+export interface CycleBounds {
+  firstDay: string;
+  lastDay: string;
+}
+
 export interface DashboardSummary {
+  cycle: CycleBounds & { startDay: number };
   nominaCents: number;
   repartidoBp: number;
   sinAsignarBp: number;
@@ -301,9 +324,11 @@ export interface DashboardSummary {
   patrimonioTotalCents: number;
 }
 
-export interface MonthSummary {
+export interface MonthSummary extends CycleBounds {
   year: number;
   month: number;
+  /** ¿Es el mes en curso? (su "cierre" es el patrimonio de hoy). */
+  current: boolean;
   nominaCents: number;
   gastadoCents: number;
   ingresosCents: number;
@@ -312,6 +337,29 @@ export interface MonthSummary {
   aportadoCents: number;
   rendimientoCents: number;
   patrimonioDeltaCents: number;
+  /** Patrimonio al cerrar el mes (hoy, si es el mes en curso). */
+  patrimonioCierreCents: number;
+}
+
+/** Suscripción / pago recurrente (定期): Kobo apunta el cargo solo el día que toca. */
+export interface Subscription {
+  id: string;
+  name: string;
+  amountCents: number;
+  categoryId: string;
+  subcategoryId?: string;
+  accountId?: string;
+  bucketId?: string;
+  frequency: 'monthly' | 'yearly';
+  /** Día pedido (1..31); en meses cortos cae el último día. */
+  dayOfMonth: number;
+  monthOfYear?: number;
+  /** Próximo cargo, `YYYY-MM-DD`. */
+  nextChargeDate: string;
+  active: boolean;
+  lastChargeDate?: string;
+  /** Si se pausó sola (p. ej. su categoría ya no existe). */
+  lastError?: string;
 }
 
 /** Liquidación de intereses estimada y aún sin registrar, por sub-saldo. */

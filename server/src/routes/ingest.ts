@@ -144,8 +144,8 @@ router.post(
     const rules = merchantNorm ? await IngestRule.find({ userId }) : [];
     const rule = matchRule(rules, merchantNorm);
 
-    // 4. Categoría destino. Con regla, la suya; sin regla, la comodín (o la
-    //    primera) y a revisar. Anti-IDOR: se relee siempre contra el userId.
+    // 4. Categoría destino. Con regla, la suya; sin regla, la de la tarjeta (o la
+    //    comodín, o la primera) y a revisar. Anti-IDOR: se relee contra el userId.
     let categoryId: Types.ObjectId | null = null;
     let subcategoryId: Types.ObjectId | undefined;
     if (rule) {
@@ -155,6 +155,22 @@ router.post(
         if (rule.subcategoryId) {
           const sub = await Subcategory.findOne({
             _id: rule.subcategoryId,
+            userId,
+            categoryId: category._id,
+          });
+          if (sub) subcategoryId = sub._id;
+        }
+      }
+    }
+    // Sin regla: la categoría por defecto de esta tarjeta (si la tiene y sigue
+    // existiendo), luego la comodín, luego la primera. Sigue entrando a revisar.
+    if (!categoryId && token?.defaultCategoryId) {
+      const category = await Category.findOne({ _id: token.defaultCategoryId, userId });
+      if (category) {
+        categoryId = category._id;
+        if (token.defaultSubcategoryId) {
+          const sub = await Subcategory.findOne({
+            _id: token.defaultSubcategoryId,
             userId,
             categoryId: category._id,
           });

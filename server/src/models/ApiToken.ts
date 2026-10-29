@@ -13,6 +13,10 @@ import { serializePlugin } from './plugins/serialize.js';
  *
  * `accountId` + `bucketId` (opcionales) son la **tarjeta física detrás del token**:
  * un token por tarjeta de Wallet, así el pago descuenta además del patrimonio.
+ *
+ * `defaultCategoryId` (+ `defaultSubcategoryId`) es dónde cae un pago de esta
+ * tarjeta cuando **ninguna regla** reconoce el comercio. Sigue entrando marcado
+ * `needsReview`: la categoría por defecto es una suposición, no una clasificación.
  */
 export interface IApiToken {
   userId: Types.ObjectId;
@@ -23,6 +27,8 @@ export interface IApiToken {
   prefix: string;
   accountId?: Types.ObjectId;
   bucketId?: Types.ObjectId;
+  defaultCategoryId?: Types.ObjectId;
+  defaultSubcategoryId?: Types.ObjectId;
   lastUsedAt?: Date;
   /**
    * Último rechazo y su motivo. Existen porque la ingesta fallaba **en silencio**:
@@ -45,6 +51,8 @@ const apiTokenSchema = new Schema<IApiToken>(
     prefix: { type: String, required: true },
     accountId: { type: Schema.Types.ObjectId, ref: 'Account' },
     bucketId: { type: Schema.Types.ObjectId },
+    defaultCategoryId: { type: Schema.Types.ObjectId, ref: 'Category' },
+    defaultSubcategoryId: { type: Schema.Types.ObjectId, ref: 'Subcategory' },
     lastUsedAt: { type: Date },
     lastFailureAt: { type: Date },
     lastFailureReason: { type: String },

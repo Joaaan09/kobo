@@ -6,6 +6,7 @@ import { Category } from '../models/Category.js';
 import { Subcategory } from '../models/Subcategory.js';
 import {
   apiTokenCreateSchema,
+  apiTokenUpdateSchema,
   ingestRuleCreateSchema,
   ingestRuleUpdateSchema,
 } from '../schemas/ingest.js';
@@ -67,6 +68,90 @@ router.post(
     });
 
     sendOk(res, { token: doc.toJSON(), secret: token }, 201);
+  }),
+);
+
+/**
+ * PATCH /api/automation/tokens/:id — edita el dispositivo: nombre, la tarjeta que
+ * hay detrás (cuenta + sub-saldo) y la categoría por defecto de los pagos que
+ * ninguna regla reconoce. El secreto no se toca (no se puede ni ver).
+ */
+router.patch(
+  '/tokens/:id',
+  asyncHandler(async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      sendError(res, 'invalid_id');
+      return;
+    }
+    const body = parseBody(apiTokenUpdateSchema, req, res);
+    if (!body) return;
+    const userId = getUserId(req);
+
+    const item = await ApiToken.findOne({ _id: req.params.id, userId });
+    if (!item) {
+      sendError(res, 'not_found', 404);
+      return;
+    }
+
+    if (body.label !== undefined) item.label = body.label;
+
+    if (body.accountId !== undefined) {
+      if (body.accountId && body.bucketId) {
+        const exists = await bucketExists(
+          userId,
+          new Types.ObjectId(body.accountId),
+          new Types.ObjectId(body.bucketId),
+        );
+        if (!exists) {
+          sendError(res, 'bucket_not_found');
+          return;
+        }
+        item.accountId = new Types.ObjectId(body.accountId);
+        item.bucketId = new Types.ObjectId(body.bucketId);
+      } else {
+        item.accountId = undefined;
+        item.bucketId = undefined;
+      }
+    }
+
+    // Categoría por defecto resultante; cambiarla suelta la subcategoría vieja.
+    if (body.defaultCategoryId !== undefined || body.defaultSubcategoryId !== undefined) {
+      const nextCategoryId =
+        body.defaultCategoryId !== undefined
+          ? body.defaultCategoryId
+          : item.defaultCategoryId
+            ? String(item.defaultCategoryId)
+            : null;
+      const categoryChanged = nextCategoryId !== (item.defaultCategoryId ? String(item.defaultCategoryId) : null);
+      const nextSubcategoryId =
+        body.defaultSubcategoryId !== undefined
+          ? body.defaultSubcategoryId
+          : categoryChanged || !item.defaultSubcategoryId
+            ? null
+            : String(item.defaultSubcategoryId);
+
+      if (nextCategoryId) {
+        const ownershipError = await validateOwnership(
+          userId,
+          nextCategoryId,
+          nextSubcategoryId ?? undefined,
+        );
+        if (ownershipError) {
+          sendError(res, ownershipError, 400);
+          return;
+        }
+      } else if (nextSubcategoryId) {
+        sendError(res, 'subcategory_without_category', 400);
+        return;
+      }
+      item.defaultCategoryId = nextCategoryId ? new Types.ObjectId(nextCategoryId) : undefined;
+      item.defaultSubcategoryId = nextSubcategoryId
+        ? new Types.ObjectId(nextSubcategoryId)
+        : undefined;
+    }
+
+    await item.save();
+    sendOk(res, item);
   }),
 );
 

@@ -38,10 +38,15 @@ export interface IExpense {
   merchant?: string;
   needsReview: boolean;
   clientRef?: string;
+  /** Si lo registró una suscripción (定期), cuál. */
+  subscriptionId?: Types.ObjectId;
 }
 
-/** Origen del gasto: escrito a mano en la app o ingerido por automatización. */
-export type ExpenseSource = 'manual' | 'ingest';
+/**
+ * Origen del gasto: escrito a mano en la app, ingerido por automatización o
+ * cargado por una suscripción recurrente.
+ */
+export type ExpenseSource = 'manual' | 'ingest' | 'subscription';
 
 export type ExpenseDocument = HydratedDocument<IExpense>;
 
@@ -58,10 +63,16 @@ const expenseSchema = new Schema<IExpense>(
     affectsPatrimony: { type: Boolean, required: true, default: true },
     note: { type: String, trim: true },
     // Los gastos creados antes de la ingesta se hidratan como 'manual' / sin revisar.
-    source: { type: String, enum: ['manual', 'ingest'], required: true, default: 'manual' },
+    source: {
+      type: String,
+      enum: ['manual', 'ingest', 'subscription'],
+      required: true,
+      default: 'manual',
+    },
     merchant: { type: String, trim: true },
     needsReview: { type: Boolean, required: true, default: false },
     clientRef: { type: String, trim: true },
+    subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
   },
   { timestamps: true },
 );

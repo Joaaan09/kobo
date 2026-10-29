@@ -2,7 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { api, ApiError } from '../../lib/api';
 import { parseInputToCents } from '../../lib/money';
-import { currentMonth, monthName, nominaDate, today } from '../../lib/month';
+import {
+  addMonths,
+  currentMonth,
+  cycleStartDay,
+  dayKeyOf,
+  monthName,
+  nominaDate,
+  nominaWindow,
+  today,
+} from '../../lib/month';
 import type {
   Account,
   Category,
@@ -59,8 +68,12 @@ type Row =
       amountCents: number;
       source?: string;
       isNomina?: boolean;
+      accountId?: string;
     }
-  | { kind: 'nomina'; id: string; date: string; amountCents: number };
+  | { kind: 'nomina'; id: string; date: string; amountCents: number; accountId?: string };
+
+/** Clave del filtro "Sin cuenta" (movimientos que no tocan ningún saldo). */
+const NO_ACCOUNT = '__sin_cuenta__';
 
 type TypeFilter = 'todos' | 'gasto' | 'ingreso';
 
@@ -139,6 +152,9 @@ export function GastosView() {
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
+  // Nóminas del ciclo anterior: una nómina adelantada (fin de semana, festivo) cae
+  // en sus últimos días pero es la de ESTE mes. Solo para saber si ya se cobró.
+  const [prevNominas, setPrevNominas] = useState<Income[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -149,6 +165,8 @@ export function GastosView() {
   const [selectedCats, setSelectedCats] = useState<Set<string>>(() =>
     fromCategoryId ? new Set([fromCategoryId]) : new Set(),
   );
+  // Filtro por cuenta (multi): gastos e ingresos de esas cuentas. `NO_ACCOUNT` = sin cuenta.
+  const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(() => new Set());
   // `/gastos?revisar=1` — a donde lleva la notificación de un gasto sin clasificar.
   const [onlyReview, setOnlyReview] = useState(
     () => new URLSearchParams(location.search).get('revisar') === '1',
@@ -175,9 +193,12 @@ export function GastosView() {
     let alive = true;
     setLoading(true);
     void (async () => {
-      const [exp, inc, cats, subs, accs, cfg] = await Promise.all([
+      const [exp, inc, prevInc, cats, subs, accs, cfg] = await Promise.all([
         api.get<Expense[]>(`/expenses?month=${month}`).catch(() => [] as Expense[]),
         api.get<Income[]>(`/incomes?month=${month}`).catch(() => [] as Income[]),
+        cycleStartDay(month) > 1
+          ? api.get<Income[]>(`/incomes?month=${addMonths(month, -1)}`).catch(() => [] as Income[])
+          : Promise.resolve([] as Income[]),
         api.get<Category[]>('/categories').catch(() => [] as Category[]),
         api.get<Subcategory[]>('/subcategories').catch(() => [] as Subcategory[]),
         api.get<Account[]>('/accounts').catch(() => [] as Account[]),
@@ -186,6 +207,7 @@ export function GastosView() {
       if (!alive) return;
       setExpenses(Array.isArray(exp) ? exp : []);
       setIncomes(Array.isArray(inc) ? inc : []);
+      setPrevNominas(Array.isArray(prevInc) ? prevInc.filter((i) => i.isNomina) : []);
       setCategories(Array.isArray(cats) ? cats : []);
       setSubcategories(Array.isArray(subs) ? subs : []);
       setAccounts(Array.isArray(accs) ? accs : []);
@@ -239,14 +261,22 @@ export function GastosView() {
    * (nadie ha cobrado todavía) — se convierte en ingreso real al confirmarla.
    */
   const nominaPrevista = useMemo(() => {
-    if (incomes.some((i) => i.isNomina)) return null; // ya cobrada este mes
+    // ¿Ya cobrada? Cualquier nómina dentro de su ventana (incluye la adelantada).
+    const win = nominaWindow(month);
+    const collected = [...incomes, ...prevNominas].some((i) => {
+      if (!i.isNomina) return false;
+      const key = dayKeyOf(i.date);
+      return key >= win.firstDay && key <= win.lastDay;
+    });
+    if (collected) return null;
     if (!incomeConfig || incomeConfig.amountCents <= 0) return null;
     if (month > currentMonth()) return null; // un mes futuro aún no se cobra
     return {
       date: nominaDate(month, incomeConfig.payDay),
       amountCents: incomeConfig.amountCents,
+      accountId: incomeConfig.defaultAccountId,
     };
-  }, [incomes, incomeConfig, month]);
+  }, [incomes, prevNominas, incomeConfig, month]);
 
   // Categorías presentes en los gastos del mes (para acotar los chips de filtro).
   const usedCategories = useMemo(() => {
@@ -285,6 +315,7 @@ export function GastosView() {
         amountCents: i.amountCents,
         source: i.source,
         isNomina: i.isNomina,
+        accountId: i.accountId,
       })),
       ...(nominaPrevista
         ? [{ kind: 'nomina' as const, id: 'prevista', ...nominaPrevista }]
@@ -303,9 +334,37 @@ export function GastosView() {
         if (row.kind !== 'gasto') return false;
         if (!selectedCats.has(row.categoryId)) return false;
       }
+      // Por cuenta: aplica a gastos e ingresos (lo que entró y salió de esa cuenta).
+      if (selectedAccounts.size > 0 && !selectedAccounts.has(row.accountId ?? NO_ACCOUNT)) {
+        return false;
+      }
       return true;
     });
-  }, [rows, typeFilter, selectedCats, onlyReview]);
+  }, [rows, typeFilter, selectedCats, selectedAccounts, onlyReview]);
+
+  // Cuentas presentes en los movimientos del mes (para acotar los chips), más
+  // "Sin cuenta" si hay movimientos que no tocan ningún saldo.
+  const usedAccounts = useMemo(() => {
+    const used = new Set(rows.map((r) => r.accountId ?? NO_ACCOUNT));
+    return {
+      accounts: accounts.filter((a) => used.has(a.id)),
+      noAccount: used.has(NO_ACCOUNT),
+    };
+  }, [rows, accounts]);
+
+  const filtersActive = onlyReview || typeFilter !== 'todos' || selectedCats.size > 0 || selectedAccounts.size > 0;
+
+  // Subtotal de lo filtrado: "¿cuánto ha salido de Revolut este mes?". La nómina
+  // prevista no suma (nadie ha cobrado todavía), igual que en el total del mes.
+  const filteredTotals = useMemo(() => {
+    let out = 0;
+    let inc = 0;
+    for (const row of filteredRows) {
+      if (row.kind === 'gasto') out += row.amountCents;
+      else if (row.kind === 'ingreso') inc += row.amountCents;
+    }
+    return { out, inc };
+  }, [filteredRows]);
 
   // Agrupa las filas filtradas por día conservando el orden desc.
   const groups = useMemo(() => {
@@ -331,6 +390,22 @@ export function GastosView() {
       else next.add(id);
       return next;
     });
+  }
+
+  function toggleAccount(id: string) {
+    setSelectedAccounts((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearFilters() {
+    setTypeFilter('todos');
+    setSelectedCats(new Set());
+    setSelectedAccounts(new Set());
+    setOnlyReview(false);
   }
 
   function openEditor(row: Row) {
@@ -594,6 +669,46 @@ export function GastosView() {
                 ))}
               </ChipGroup>
             ) : null}
+            {/* Por cuenta solo tiene sentido con dos opciones o más. */}
+            {usedAccounts.accounts.length + (usedAccounts.noAccount ? 1 : 0) > 1 ? (
+              <ChipGroup label="Filtrar por cuenta" className={styles.catFilter}>
+                {usedAccounts.accounts.map((acc) => (
+                  <Chip
+                    key={acc.id}
+                    selected={selectedAccounts.has(acc.id)}
+                    dotColor={acc.color}
+                    onClick={() => toggleAccount(acc.id)}
+                  >
+                    {acc.name}
+                  </Chip>
+                ))}
+                {usedAccounts.noAccount ? (
+                  <Chip
+                    selected={selectedAccounts.has(NO_ACCOUNT)}
+                    onClick={() => toggleAccount(NO_ACCOUNT)}
+                  >
+                    Sin cuenta
+                  </Chip>
+                ) : null}
+              </ChipGroup>
+            ) : null}
+            {filtersActive && filteredRows.length > 0 ? (
+              <p className={styles.filteredTotal} aria-live="polite">
+                Filtrado:{' '}
+                {filteredTotals.out > 0 ? (
+                  <>
+                    gastado <Money cents={filteredTotals.out} className={styles.summaryNum} />
+                  </>
+                ) : null}
+                {filteredTotals.out > 0 && filteredTotals.inc > 0 ? ' · ' : null}
+                {filteredTotals.inc > 0 ? (
+                  <>
+                    ingresos <Money cents={filteredTotals.inc} signed className={styles.summaryNum} />
+                  </>
+                ) : null}
+                {filteredTotals.out === 0 && filteredTotals.inc === 0 ? 'sin importes' : null}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -615,14 +730,7 @@ export function GastosView() {
                 ? 'Nada por revisar: todos los gastos del mes están clasificados.'
                 : 'No hay movimientos con estos filtros.'}
             </p>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setTypeFilter('todos');
-                setSelectedCats(new Set());
-                setOnlyReview(false);
-              }}
-            >
+            <Button variant="ghost" onClick={clearFilters}>
               {onlyReview ? 'Ver todo' : 'Limpiar filtros'}
             </Button>
           </Card>

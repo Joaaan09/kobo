@@ -9,7 +9,15 @@ import { IncomeConfig } from '../models/IncomeConfig.js';
 import { assignedCents } from './money.js';
 import { foldReparto, effectiveAssignedCents } from './reparto.js';
 import { computeFundsForMonth, type FundView } from './funds.js';
-import { madridMonthRange, madridParts, daysInMonth } from '../lib/time.js';
+import {
+  cycleRange,
+  cycleLengthDays,
+  cycleDayIndex,
+  cycleStartDayFor,
+  madridDayKey,
+  type CycleConfig,
+} from '../lib/time.js';
+import { getCycleConfig } from './cycle.js';
 
 /**
  * Nómina vigente (céntimos). v1: una sola config por usuario, se usa su importe
@@ -44,15 +52,26 @@ export interface DashboardCategory {
 }
 
 export interface DashboardRitmo {
+  /** Día del ciclo (1-based): hoy si es el mes en curso, `diasMes` si es pasado, 0 si es futuro. */
   diaActual: number;
+  /** Días del ciclo (no del mes natural: con inicio el 25, de 25 a 24). */
   diasMes: number;
   gastadoCents: number;
   ritmoIdealCents: number;
 }
 
+/** Límites del ciclo consultado, como días `YYYY-MM-DD` de Madrid (ambos inclusive). */
+export interface DashboardCycle {
+  firstDay: string;
+  lastDay: string;
+  /** Día en que empieza el ciclo (1 = mes natural). */
+  startDay: number;
+}
+
 export interface DashboardData {
   year: number;
   month: number;
+  cycle: DashboardCycle;
   nominaCents: number;
   repartidoBp: number;
   sinAsignarBp: number;
@@ -96,13 +115,17 @@ export interface DashboardData {
  * - `ritmoIdealCents = round((nómina − ahorrado − reservado) · diaActual/diasMes)`:
  *   se paga contra el presupuesto **libre**. `diaActual` = hoy si el mes es el actual,
  *   `diasMes` si es pasado, 0 si es futuro.
+ * - El "mes" es el **ciclo** del usuario (`getCycleConfig`): con inicio el día de
+ *   cobro, octubre va del 25 oct al 24 nov y el ritmo cuenta días de ese ciclo.
  */
 export async function computeDashboard(
   userId: string,
   year: number,
   month: number,
+  cycleConfig?: CycleConfig,
 ): Promise<DashboardData> {
-  const { start, end } = madridMonthRange(year, month);
+  const cfg = cycleConfig ?? (await getCycleConfig(userId));
+  const { start, end } = cycleRange(cfg, year, month);
   const uid = new Types.ObjectId(userId);
   const range = { $gte: start, $lt: end };
 
@@ -142,7 +165,7 @@ export async function computeDashboard(
         },
       ]),
       Account.find({ userId }).lean(),
-      computeFundsForMonth(userId, year, month),
+      computeFundsForMonth(userId, year, month, cfg),
       Distribution.find({ userId, year, month }).lean(),
       // Ahorro del mes: traspasos que consumen el sobre de una categoría `savings`.
       Transfer.aggregate<{ _id: Types.ObjectId; saved: number }>([
@@ -228,17 +251,10 @@ export async function computeDashboard(
   // sigue siendo tu dinero, solo cambia de bucket (tampoco toca el patrimonio).
   const restanteMesCents = nominaCents + ingresosExtraCents - gastadoConFondosCents;
 
-  // Ritmo del mes (zona Europe/Madrid).
-  const diasMes = daysInMonth(year, month);
-  const now = madridParts(new Date());
-  let diaActual: number;
-  if (now.year === year && now.month === month) {
-    diaActual = now.day;
-  } else if (year < now.year || (year === now.year && month < now.month)) {
-    diaActual = diasMes; // mes pasado → completo
-  } else {
-    diaActual = 0; // mes futuro
-  }
+  // Ritmo del ciclo (zona Europe/Madrid): día del ciclo en que estamos hoy,
+  // completo si el ciclo ya cerró y 0 si aún no ha empezado.
+  const diasMes = cycleLengthDays(cfg, year, month);
+  const diaActual = cycleDayIndex(cfg, year, month, new Date());
   // El ritmo se mide contra el presupuesto LIBRE del mes: la nómina menos lo ya
   // apartado (ahorro a mano + reserva de fondos). Así `gastable − gastado = queda`.
   const gastableCents = Math.max(0, nominaCents - ahorradoTotalCents - reservadoTotalCents);
@@ -253,6 +269,11 @@ export async function computeDashboard(
   return {
     year,
     month,
+    cycle: {
+      firstDay: madridDayKey(start),
+      lastDay: madridDayKey(new Date(end.getTime() - 1)),
+      startDay: cycleStartDayFor(cfg, year, month),
+    },
     nominaCents,
     repartidoBp,
     sinAsignarBp,

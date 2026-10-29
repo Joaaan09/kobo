@@ -552,6 +552,76 @@
   text-align: right;
 }
 
+/* ---------- Suscripciones (定期) ---------- */
+.subsTotal {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.subsName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.subsDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Presupuesto de la categoría en la hoja de subcategorías: total, lo ya
+ * asignado y lo que queda por repartir (se mueve al teclear). */
+.subBudget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.subBudgetRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.subBudgetNum {
+  color: var(--ink-2);
+}
+
+.subBudgetTotal {
+  padding-top: var(--space-2);
+  margin-top: var(--space-1);
+  border-top: 1px solid var(--border);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.subBudgetRemaining {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.subBudgetOver {
+  color: var(--accent);
+}
+
+.subBudgetHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+
 .subhead {
   margin: 0;
   font-size: 12.5px;
